@@ -9,8 +9,8 @@ from typing import Optional
 @dataclass
 class Move:
     piece: str
-    to_x: int
-    to_y: int
+    to_file: int
+    to_rank: int
 
 
 class Board:
@@ -78,12 +78,12 @@ def parse_command(cmd: str) -> Optional[Move]:
         cmd = cmd[1:]
 
     if len(cmd) == 2:
-        x, y = cmd
-        if x not in 'abcdefgh':
+        file, rank = cmd
+        if file not in 'abcdefgh':
             return None
-        if y not in '12345678':
+        if rank not in '12345678':
             return None
-        return Move(piece, 'abcdefgh'.index(x), '12345678'.index(y))
+        return Move(piece, 'abcdefgh'.index(file), '12345678'.index(rank))
 
     return None
 
