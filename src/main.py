@@ -2,6 +2,16 @@
 
 import curses
 
+from dataclasses import dataclass
+from typing import Optional
+
+
+@dataclass
+class Move:
+    piece: str
+    to_x: int
+    to_y: int
+
 
 class Board:
     def __init__(self):
@@ -54,7 +64,7 @@ class Display:
         return self._input_line.getstr(3).decode('utf-8')
 
 
-def parse_command(cmd: str):
+def parse_command(cmd: str) -> Optional[Move]:
     cmd = cmd.strip().lower()
 
     if len(cmd) < 2:
@@ -73,7 +83,7 @@ def parse_command(cmd: str):
             return None
         if y not in '12345678':
             return None
-        return piece, 'abcdefgh'.index(x), '12345678'.index(y)
+        return Move(piece, 'abcdefgh'.index(x), '12345678'.index(y))
 
     return None
 
