@@ -3,6 +3,7 @@
 import curses
 
 from enum import Enum
+from typing import List
 
 from move import Move, parse_move
 from move import Square
@@ -47,6 +48,46 @@ class Board:
 
     def at(self, square: Square) -> str:
         return self._board[square._square]
+
+    def valid_moves(self, src: Square) -> List[Square]:
+        piece = self._board[src._square]
+        if piece == '.':  # empty square
+            return []
+        owner = get_piece_owner(piece)
+        piece = piece.upper()
+        dests = []
+        if piece == 'P':
+            if owner == Player.WHITE:
+                assert src._rank != 7
+                if self.at(Square(src._file, src._rank+1)) == '.':
+                    dests.append(Square(src._file, src._rank+1))
+                if src._file > 0 \
+                        and self.at(Square(src._file-1, src._rank+1)) != '.' \
+                        and get_piece_owner(self.at(Square(src._file-1, src._rank+1))) != owner:
+                    dests.append(Square(src._file-1, src._rank+1))
+                if src._file < 7 \
+                        and self.at(Square(src._file+1, src._rank+1)) != '.' \
+                        and get_piece_owner(self.at(Square(src._file+1, src._rank+1))) != owner:
+                    dests.append(Square(src._file+1, src._rank+1))
+        return dests
+
+    def is_valid_move(self, move: Move, player: Player) -> bool:
+        if move.castling is not None:
+            return False  # let's not deal with castlings for now
+        assert move.dest is not None
+        dest_square = Square(move.dest)
+        piece = format_piece(move.piece or 'P', player)
+        if piece not in self._board:
+            return False
+        piece_pos = self._board.index(piece)
+        possible_pieces_count = 0
+        while True:
+            if dest_square in self.valid_moves(Square(piece_pos)):
+                possible_pieces_count += 1
+            if piece not in self._board[piece_pos+1:]:
+                break
+            piece_pos = self._board.index(piece, piece_pos+1)
+        return possible_pieces_count > 0
 
 
 class Display:
@@ -98,6 +139,7 @@ if __name__ == '__main__':
     while True:
         move = parse_move(dsp.get_move())
         if not move:
+            dsp.show_message('Invalid move!')
             continue
-        break
+        dsp.show_message(str(board.is_valid_move(move, Player.WHITE)))
 
