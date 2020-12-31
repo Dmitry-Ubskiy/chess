@@ -3,7 +3,7 @@
 import curses
 
 
-from move import Move
+from move import Move, parse_move
 
 
 
@@ -65,8 +65,8 @@ if __name__ == '__main__':
     dsp.update_board(board)
 
     while True:
-        move = dsp.get_move()
-        if not Move.is_valid_notation(move):
+        move = parse_move(dsp.get_move())
+        if not move:
             continue
         break
 
