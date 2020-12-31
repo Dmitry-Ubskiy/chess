@@ -28,26 +28,7 @@ class Square:
         ...
 
     def __init__(self, *args, **kwargs):
-        if len(args) == 0:
-            pass  # straight to kwargs
-        elif len(args) == 1:
-            if type(args[0]) == str:
-                assert not kwargs
-                kwargs['square_name'] = args[0]
-            elif type(args[0]) == int:
-                if 'file' in kwargs:
-                    assert 'rank' not in kwargs
-                    kwargs['rank'] = args[0]
-                elif 'rank' in kwargs:
-                    kwargs['file'] = args[0]
-                else:
-                    assert not kwargs
-                    kwargs['square_index'] = args[0]
-        elif len(args) == 2:  # (file, rank)
-            assert not kwargs
-            kwargs['file'], kwargs['rank'] = args
-        else:
-            raise TypeError()
+        kwargs = Square.__consolidate_overload_args(args, kwargs)
 
         if 'square_name' in kwargs:
             square_name = kwargs['square_name']
@@ -92,22 +73,48 @@ class Square:
         ...
 
     @staticmethod
+    @overload
+    def valid_square(file: int, rank: int) -> bool:
+        ...
+
+    @staticmethod
     def valid_square(*args, **kwargs) -> bool:
-        if len(args) == 1:
-            arg = args[0]
-            if type(arg) == str:
-                kwargs['square_name'] = arg
-            elif type(arg) == int:
-                kwargs['square_index'] = arg
-            else:
-                raise TypeError()
+        kwargs = Square.__consolidate_overload_args(args, kwargs)
 
         if 'square_name' in kwargs:
             return kwargs['square_name'] in Square.SQUARE_NAMES
         elif 'square_index' in kwargs:
             return kwargs['square_index'] in range(len(Square.SQUARE_NAMES))
+        elif 'file' in kwargs:
+            if 'rank' not in kwargs:
+                raise TypeError()
+            return kwargs['file'] in range(len(FILES)) and kwargs['rank'] in range(len(RANKS))
         else:
             raise TypeError()
+
+    @staticmethod
+    def __consolidate_overload_args(args, kwargs):
+        if len(args) == 0:
+            pass  # straight to kwargs
+        elif len(args) == 1:
+            if type(args[0]) == str:
+                assert not kwargs
+                kwargs['square_name'] = args[0]
+            elif type(args[0]) == int:
+                if 'file' in kwargs:
+                    assert 'rank' not in kwargs
+                    kwargs['rank'] = args[0]
+                elif 'rank' in kwargs:
+                    kwargs['file'] = args[0]
+                else:
+                    assert not kwargs
+                    kwargs['square_index'] = args[0]
+        elif len(args) == 2:  # (file, rank)
+            assert not kwargs
+            kwargs['file'], kwargs['rank'] = args
+        else:
+            raise TypeError()
+        return kwargs
 
 
 @dataclass
