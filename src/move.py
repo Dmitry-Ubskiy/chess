@@ -3,7 +3,7 @@
 import re
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, overload
 
 
 CASTLINGS = ('0-0', '0-0-0')
@@ -13,20 +13,101 @@ RANKS = list('12345678')
 
 
 class Square:
-    SQUARES = list(range(64))
-    SQUARE_NAMES = [''.join((f, r)) for f in FILES for r in RANKS]
+    SQUARE_NAMES = [''.join((f, r)) for r in RANKS for f in FILES]
 
+    @overload
     def __init__(self, square_name: str):
-        self._square_name = square_name.lower()
-        if self._square_name not in Square.SQUARE_NAMES:
-            raise ValueError(f'Not a valid square name: "{square_name}"')
-        self._file = 'abcdefgh'.index(self._square_name[0])
-        self._rank = '12345678'.index(self._square_name[1])
-        self._square = self._file * 8 + self._rank
+        ...
+
+    @overload
+    def __init__(self, square_index: int):
+        ...
+
+    @overload
+    def __init__(self, file: int, rank: int):
+        ...
+
+    def __init__(self, *args, **kwargs):
+        if len(args) == 0:
+            pass  # straight to kwargs
+        elif len(args) == 1:
+            if type(args[0]) == str:
+                assert not kwargs
+                kwargs['square_name'] = args[0]
+            elif type(args[0]) == int:
+                if 'file' in kwargs:
+                    assert 'rank' not in kwargs
+                    kwargs['rank'] = args[0]
+                elif 'rank' in kwargs:
+                    kwargs['file'] = args[0]
+                else:
+                    assert not kwargs
+                    kwargs['square_index'] = args[0]
+        elif len(args) == 2:  # (file, rank)
+            assert not kwargs
+            kwargs['file'], kwargs['rank'] = args
+        else:
+            raise TypeError()
+
+        if 'square_name' in kwargs:
+            square_name = kwargs['square_name']
+            self._square_name = square_name.lower()
+            if self._square_name not in Square.SQUARE_NAMES:
+                raise ValueError(f'Not a valid square name: "{square_name}"')
+            self._file = FILES.index(self._square_name[0])
+            self._rank = RANKS.index(self._square_name[1])
+            self._square = self._rank * 8 + self._file
+        elif 'square_index' in kwargs:
+            square_index = kwargs['square_index']
+            if square_index not in range(len(Square.SQUARE_NAMES)):
+                raise ValueError(f'Not a valid square index: "{square_index}"')
+            self._square = square_index
+            self._square_name = Square.SQUARE_NAMES[self._square]
+            self._file = FILES.index(self._square_name[0])
+            self._rank = RANKS.index(self._square_name[1])
+        elif 'file' in kwargs:
+            if 'rank' not in kwargs:
+                raise TypeError()
+            file, rank = kwargs['file'], kwargs['rank']
+            if file not in range(len(FILES)) or rank not in range(len(RANKS)):
+                raise ValueError(f'Not valid square coordinates: "{file, rank}"')
+            self._file = file
+            self._rank = rank
+            self._square = self._rank * 8 + self._file
+            self._square_name = Square.SQUARE_NAMES[self._square]
+        else:
+            raise TypeError()
+
+    def __eq__(self, other):
+        return self._square == other._square
 
     @staticmethod
-    def valid_square(square_name):
-        return square_name in Square.SQUARE_NAMES
+    @overload
+    def valid_square(square_name: str) -> bool:
+        ...
+
+    @staticmethod
+    @overload
+    def valid_square(square_index: int) -> bool:
+        ...
+
+    @staticmethod
+    def valid_square(*args, **kwargs) -> bool:
+        if len(args) == 1:
+            arg = args[0]
+            if type(arg) == str:
+                kwargs['square_name'] = arg
+            elif type(arg) == int:
+                kwargs['square_index'] = arg
+            else:
+                raise TypeError()
+
+        if 'square_name' in kwargs:
+            return kwargs['square_name'] in Square.SQUARE_NAMES
+        elif 'square_index' in kwargs:
+            return kwargs['square_index'] in range(len(Square.SQUARE_NAMES))
+        else:
+            raise TypeError()
 
 
 @dataclass
