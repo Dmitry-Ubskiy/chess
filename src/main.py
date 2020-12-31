@@ -2,10 +2,31 @@
 
 import curses
 
+from enum import Enum
 
 from move import Move, parse_move
 from move import Square
 
+
+class Player(Enum):
+    NONE = 0
+    WHITE = 1
+    BLACK = 2
+
+
+def format_piece(piece: str, player: Player) -> str:
+    if player == Player.WHITE:
+        return piece.upper()
+    return piece.lower()
+
+
+def get_piece_owner(piece: str) -> Player:
+    if piece.isupper():
+        return Player.WHITE
+    elif piece.islower():
+        return Player.BLACK
+    assert piece == '.'
+    return Player.NONE  # neither player (empty space)
 
 
 class Board:
