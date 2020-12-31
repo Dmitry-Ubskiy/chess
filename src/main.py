@@ -2,15 +2,9 @@
 
 import curses
 
-from dataclasses import dataclass
-from typing import Optional
 
+from move import Move
 
-@dataclass
-class Move:
-    piece: str
-    to_file: int
-    to_rank: int
 
 
 class Board:
@@ -58,34 +52,10 @@ class Display:
         self._board_display.addstr(0, 0, board.format())
         self._board_display.refresh()
 
-    def get_command(self) -> str:
+    def get_move(self) -> str:
         self._input_line.clear()
         self._input_line.addstr(0, 0, '> ')
-        return self._input_line.getstr(3).decode('utf-8')
-
-
-def parse_command(cmd: str) -> Optional[Move]:
-    cmd = cmd.strip().lower()
-
-    if len(cmd) < 2:
-        return None
-    
-    piece = 'p'
-    if len(cmd) == 3:
-        piece = cmd[0]
-        if piece not in 'rnbkqp':
-            return None
-        cmd = cmd[1:]
-
-    if len(cmd) == 2:
-        file, rank = cmd
-        if file not in 'abcdefgh':
-            return None
-        if rank not in '12345678':
-            return None
-        return Move(piece, 'abcdefgh'.index(file), '12345678'.index(rank))
-
-    return None
+        return self._input_line.getstr(6).decode('utf-8')
 
 
 if __name__ == '__main__':
@@ -95,8 +65,8 @@ if __name__ == '__main__':
     dsp.update_board(board)
 
     while True:
-        cmd = parse_command(dsp.get_command())
-        if cmd is None:
+        move = dsp.get_move()
+        if not Move.is_valid_notation(move):
             continue
-
+        break
 
