@@ -4,24 +4,28 @@ import curses
 
 
 from move import Move, parse_move
+from move import Square
 
 
 
 class Board:
     def __init__(self):
-        self._board = [
-            list('rnbqkbnr'),
-            ['p'] * 8,
-            ['.'] * 8,
-            ['.'] * 8,
-            ['.'] * 8,
-            ['.'] * 8,
-            ['P'] * 8,
+        self._board = sum([
             list('RNBQKBNR'),
-        ]
+            ['P'] * 8,
+            ['.'] * 8,
+            ['.'] * 8,
+            ['.'] * 8,
+            ['.'] * 8,
+            ['p'] * 8,
+            list('rnbqkbnr'),
+        ], [])
 
-    def format(self):
-        return '\n'.join(' '.join(row) for row in self._board)
+    def format(self) -> str:
+        return '\n'.join(reversed([' '.join(row) for row in zip(*[iter(self._board)]*8)]))
+
+    def at(self, square: Square) -> str:
+        return self._board[square._square]
 
 
 class Display:
