@@ -101,8 +101,8 @@ class Display:
         curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
 
         self._stdscr.attron(curses.color_pair(1))
-        self._stdscr.addstr(0, 0, '  A B C D E F G H  ')
-        self._stdscr.addstr(9, 0, '  A B C D E F G H  ')
+        self._stdscr.addstr(0, 0, '  a b c d e f g h  ')
+        self._stdscr.addstr(9, 0, '  a b c d e f g h  ')
         for i, c in enumerate('87654321'):
             self._stdscr.addch(i + 1, 0, c)
             self._stdscr.addch(i + 1, 18, c)
