@@ -3,7 +3,29 @@
 import re
 
 from dataclasses import dataclass
-from typing import Optional, overload
+from enum import Enum
+from typing import List, Optional
+from typing import overload
+
+
+class Player(Enum):
+    WHITE = 1
+    BLACK = 2
+
+
+def format_piece(piece: str, player: Player) -> str:
+    if player == Player.WHITE:
+        return piece.upper()
+    return piece.lower()
+
+
+def get_piece_owner(piece: str) -> Optional[Player]:
+    if piece.isupper():
+        return Player.WHITE
+    elif piece.islower():
+        return Player.BLACK
+    assert piece == '.'
+    return None  # neither player (empty space)
 
 
 CASTLINGS = ('0-0', '0-0-0')
@@ -166,3 +188,45 @@ def parse_move(move_notation: str) -> Move:
         return Move(**promotion_move.groupdict())
 
     return Move()
+
+
+class Board:
+    def __init__(self):
+        self._board = sum([
+            list('RNBQKBNR'),
+            ['P'] * 8,
+            ['.'] * 8,
+            ['.'] * 8,
+            ['.'] * 8,
+            ['.'] * 8,
+            ['p'] * 8,
+            list('rnbqkbnr'),
+        ], [])
+        self._en_passant = None
+
+    def format(self) -> str:
+        return '\n'.join(reversed([' '.join(row) for row in zip(*[iter(self._board)]*8)]))
+
+    def at(self, square: Square) -> str:
+        return self._board[square._square]
+
+    def valid_moves(self, src: Square) -> List[Square]:
+        return []
+
+    def is_valid_move(self, move: Move, player: Player) -> bool:
+        if move.castling is not None:
+            return False  # let's not deal with castlings for now
+        assert move.dest is not None
+        dest_square = Square(move.dest)
+        piece = format_piece(move.piece or 'P', player)
+        if piece not in self._board:
+            return False
+        piece_pos = self._board.index(piece)
+        possible_pieces_count = 0
+        while True:
+            if dest_square in self.valid_moves(Square(piece_pos)):
+                possible_pieces_count += 1
+            if piece not in self._board[piece_pos+1:]:
+                break
+            piece_pos = self._board.index(piece, piece_pos+1)
+        return possible_pieces_count > 0
