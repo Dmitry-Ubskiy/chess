@@ -81,7 +81,9 @@ class Square:
         else:
             raise TypeError()
 
-    def __eq__(self, other):
+    def __eq__(self, other: "Square") -> bool:
+        if type(other) != Square:
+            return False
         return self._square == other._square
 
     @staticmethod
