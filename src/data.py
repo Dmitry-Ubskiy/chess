@@ -131,38 +131,38 @@ class Move:
 
 
 def parse_move(move_notation: str) -> Move:
-        # Grammar:
-        #      <move> ::= <castling> | <algebraic>
-        #  <castling> ::= "0-0" | "0-0-0"
-        # <algebraic> ::= <normal> | <promotion>
-        #    <normal> ::= (<piece>)? (<src>)? ("x")? <square>
-        # <promotion> ::= (<src>)? ("x")? <square> <piece>
-        #      <src> ::= <file> | <square>
-        #    <square> ::= <file> <rank>
-        #     <piece> ::= "R" | "N" | "B" | "Q" | "K"
-        #      <file> ::= "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h"
-        #      <rank> ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8"
+    # Grammar:
+    #      <move> ::= <castling> | <algebraic>
+    #  <castling> ::= "0-0" | "0-0-0"
+    # <algebraic> ::= <normal> | <promotion>
+    #    <normal> ::= (<piece>)? (<src>)? ("x")? <square>
+    # <promotion> ::= (<src>)? ("x")? <square> <piece>
+    #      <src> ::= <file> | <square>
+    #    <square> ::= <file> <rank>
+    #     <piece> ::= "R" | "N" | "B" | "Q" | "K"
+    #      <file> ::= "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h"
+    #      <rank> ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8"
 
-        if move_notation in CASTLINGS:
-            return Move(castling=move_notation)
+    if move_notation in CASTLINGS:
+        return Move(castling=move_notation)
 
-        match_piece = f'[{"".join(PIECES)}]'
-        match_file = f'[{"".join(FILES)}]'
-        match_rank = f'[{"".join(RANKS)}]'
-        match_square = f'{match_file}{match_rank}'
+    match_piece = f'[{"".join(PIECES)}]'
+    match_file = f'[{"".join(FILES)}]'
+    match_rank = f'[{"".join(RANKS)}]'
+    match_square = f'{match_file}{match_rank}'
 
-        match_src = f'(?:{match_file}|{match_square})'
-        
-        match_common = f'(?P<src>{match_src})?(?P<capture>x)?(?P<dest>{match_square})'
-        match_normal = f'(?P<piece>{match_piece})?{match_common}$'
-        match_promotion = f'{match_common}(?P<promotion>{match_piece})?$'
+    match_src = f'(?:{match_file}|{match_square})'
+    
+    match_common = f'(?P<src>{match_src})?(?P<capture>x)?(?P<dest>{match_square})'
+    match_normal = f'(?P<piece>{match_piece})?{match_common}$'
+    match_promotion = f'{match_common}(?P<promotion>{match_piece})?$'
 
-        normal_move = re.match(match_normal, move_notation)
-        if normal_move is not None:
-            return Move(**normal_move.groupdict())
+    normal_move = re.match(match_normal, move_notation)
+    if normal_move is not None:
+        return Move(**normal_move.groupdict())
 
-        promotion_move = re.match(match_promotion, move_notation)
-        if promotion_move is not None:
-            return Move(**promotion_move.groupdict())
+    promotion_move = re.match(match_promotion, move_notation)
+    if promotion_move is not None:
+        return Move(**promotion_move.groupdict())
 
-        return Move()
+    return Move()
