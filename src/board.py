@@ -4,7 +4,7 @@ import re
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from typing import overload
 
 
@@ -85,6 +85,12 @@ class Square:
         if type(other) != Square:
             return False
         return self._square == other._square
+
+    def __add__(self, other: Tuple[int, int]) -> Optional["Square"]:
+        df, dr = other
+        if Square.valid_square(self._file + df, self._rank + dr):
+            return Square(self._file + df, self._rank + dr)
+        return None
 
     @staticmethod
     @overload
