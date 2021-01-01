@@ -159,7 +159,7 @@ def parse_move(move_notation: str) -> Move:
     # <algebraic> ::= <normal> | <promotion>
     #    <normal> ::= (<piece>)? (<src>)? ("x")? <square>
     # <promotion> ::= (<src>)? ("x")? <square> <piece>
-    #      <src> ::= <file> | <square>
+    #      <src> ::= <file> | <rank> | <square>
     #    <square> ::= <file> <rank>
     #     <piece> ::= "R" | "N" | "B" | "Q" | "K"
     #      <file> ::= "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h"
@@ -173,7 +173,7 @@ def parse_move(move_notation: str) -> Move:
     match_rank = f'[{"".join(RANKS)}]'
     match_square = f'{match_file}{match_rank}'
 
-    match_src = f'(?:{match_file}|{match_square})'
+    match_src = f'(?:{match_file}|{match_rank}|{match_square})'
     
     match_common = f'(?P<src>{match_src})?(?P<capture>x)?(?P<dest>{match_square})'
     match_normal = f'(?P<piece>{match_piece})?{match_common}$'
