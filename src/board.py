@@ -199,17 +199,20 @@ def parse_move(move_notation: str) -> Move:
 
 
 class Board:
-    def __init__(self):
-        self._board = sum([
-            list('RNBQKBNR'),
-            ['P'] * 8,
-            ['.'] * 8,
-            ['.'] * 8,
-            ['.'] * 8,
-            ['.'] * 8,
-            ['p'] * 8,
-            list('rnbqkbnr'),
-        ], [])
+    def __init__(self, fen: str = 'RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w KQkq - 0 1'):
+        board_desc, *_ = fen.split()
+        rows = board_desc.split('/')
+        def parse_row(row: str) -> List[str]:
+            parsed = []
+            for c in row:
+                if c in '12345678':
+                    parsed.extend(['.'] * int(c))
+                elif c.upper() in PIECES + ['P']:
+                    parsed.append(c)
+                else:
+                    raise ValueError()
+            return parsed
+        self._board = sum(map(parse_row, rows), [])
         self._en_passant = None
 
     def format(self) -> str:
