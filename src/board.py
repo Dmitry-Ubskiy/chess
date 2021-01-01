@@ -229,12 +229,36 @@ class Board:
         piece = format_piece(move.piece or 'P', player)
         if piece not in self._board:
             return False
-        piece_pos = self._board.index(piece)
+
         possible_pieces_count = 0
-        while True:
-            if dest_square in self.valid_moves(Square(piece_pos)):
-                possible_pieces_count += 1
-            if piece not in self._board[piece_pos+1:]:
-                break
-            piece_pos = self._board.index(piece, piece_pos+1)
+        if move.src is not None:
+            if Square.valid_square(move.src):  # explicit, e.g. Ne2g3
+                src_square = Square(move.src)
+                if self.at(src_square) != piece:
+                    return False
+                return dest_square in self.valid_moves(src_square)
+            elif move.src in RANKS:  # e.g. N2g3
+                rank = move.src
+                for file in FILES:
+                    src_square = Square(file + rank)
+                    if self.at(src_square) == piece:
+                        if dest_square in self.valid_moves(src_square):
+                            possible_pieces_count += 1
+            elif move.src in FILES:  # e.g. Neg3
+                file = move.src
+                for rank in RANKS:
+                    src_square = Square(file + rank)
+                    if self.at(src_square) == piece:
+                        if dest_square in self.valid_moves(src_square):
+                            possible_pieces_count += 1
+            else:
+                raise ValueError(f'Malformed move source square: "{move.src}"')
+        else:
+            piece_index = self._board.index(piece)
+            while True:
+                if dest_square in self.valid_moves(Square(piece_index)):
+                    possible_pieces_count += 1
+                if piece not in self._board[piece_index+1:]:
+                    break
+                piece_index = self._board.index(piece, piece_index+1)
         return possible_pieces_count > 0
