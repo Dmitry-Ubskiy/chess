@@ -199,7 +199,7 @@ def parse_move(move_notation: str) -> Move:
 
 
 class Board:
-    def __init__(self, fen: str = 'RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w KQkq - 0 1'):
+    def __init__(self, fen: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'):
         board_desc, *_ = fen.split()
         rows = board_desc.split('/')
         def parse_row(row: str) -> List[str]:
@@ -212,7 +212,7 @@ class Board:
                 else:
                     raise ValueError()
             return parsed
-        self._board = sum(map(parse_row, rows), [])
+        self._board = sum(map(parse_row, reversed(rows)), [])
         self._en_passant = None
 
     def format(self) -> str:
