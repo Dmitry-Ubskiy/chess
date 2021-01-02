@@ -57,5 +57,5 @@ if __name__ == '__main__':
         if not move:
             dsp.show_message('Invalid move!')
             continue
-        dsp.show_message(str(board.is_valid_move(move, Player.WHITE)))
+        dsp.show_message(str(board.is_valid_move(move)))
 

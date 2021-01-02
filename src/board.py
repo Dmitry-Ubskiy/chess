@@ -222,6 +222,7 @@ class Board:
                 raise ValueError(f'Character not recognized in FEN board representation: "{c}"')
         if len(self._board) != 64:
             raise ValueError('Malformed FEN board representation: wrong number of total squares')
+        self._active_player = Player.WHITE if active == 'w' else Player.BLACK
         self._en_passant = None if en_passant == '-' else Square(en_passant)
 
     def format(self) -> str:
@@ -279,12 +280,12 @@ class Board:
 
         return dests
 
-    def is_valid_move(self, move: Move, player: Player) -> bool:
+    def is_valid_move(self, move: Move) -> bool:
         if move.castling is not None:
             return False  # let's not deal with castlings for now
         assert move.dest is not None
         dest_square = Square(move.dest)
-        piece = format_piece(move.piece or 'P', player)
+        piece = format_piece(move.piece or 'P', self._active_player)
         if piece not in self._board:
             return False
 
