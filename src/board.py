@@ -267,6 +267,12 @@ class Board:
             push_square = src + (0, rank_dir)
             if push_square is not None and self[push_square] == '.':
                 dests.add(push_square)
+            # double push; works if pawns can start on 1st rank (double push from original position or 2nd rank)
+            home_ranks = (0, 1) if owner == Player.WHITE else (6, 7)  # 0-indexed; rank index 0 == '1'
+            if src._rank in home_ranks:
+                double_push_square = push_square + (0, rank_dir)
+                if double_push_square is not None and self[double_push_square] == '.':
+                    dests.add(double_push_square)
             for capture_square in [src + (df, rank_dir) for df in (-1, 1)]:
                 if capture_square is not None:
                     if capture_square == self._en_passant or get_piece_owner(self[capture_square]) == opponent:
