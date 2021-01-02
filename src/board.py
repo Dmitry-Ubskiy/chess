@@ -92,6 +92,9 @@ class Square:
             return Square(self._file + df, self._rank + dr)
         return None
 
+    def __repr__(self) -> str:
+        return self._square_name
+
     @staticmethod
     @overload
     def valid_square(square_name: str) -> bool:
