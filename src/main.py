@@ -2,7 +2,7 @@
 
 import curses
 
-from board import Board, Player
+from board import Board
 from board import parse_move
 
 
