@@ -70,7 +70,7 @@ class Square:
             self._rank = RANKS.index(self._square_name[1])
         elif 'file' in kwargs:
             if 'rank' not in kwargs:
-                raise TypeError()
+                raise TypeError('Cannot construct a Square: got "file" but not "rank"')
             file, rank = kwargs['file'], kwargs['rank']
             if file not in range(len(FILES)) or rank not in range(len(RANKS)):
                 raise ValueError(f'Not valid square coordinates: "{file, rank}"')
@@ -79,7 +79,7 @@ class Square:
             self._square = self._rank * 8 + self._file
             self._square_name = Square.SQUARE_NAMES[self._square]
         else:
-            raise TypeError()
+            raise TypeError('Empty or malformed arguments to Square()')
 
     def __eq__(self, other: "Square") -> bool:
         if type(other) != Square:
@@ -123,10 +123,10 @@ class Square:
             return kwargs['square_index'] in range(len(Square.SQUARE_NAMES))
         elif 'file' in kwargs:
             if 'rank' not in kwargs:
-                raise TypeError()
+                raise TypeError('Cannot validate a Square: got "file" but not "rank"')
             return kwargs['file'] in range(len(FILES)) and kwargs['rank'] in range(len(RANKS))
         else:
-            raise TypeError()
+            raise TypeError('Empty or malformed arguments to Square.valid_square()')
 
     @staticmethod
     def __consolidate_overload_args(args, kwargs):
@@ -149,7 +149,7 @@ class Square:
             assert not kwargs
             kwargs['file'], kwargs['rank'] = args
         else:
-            raise TypeError()
+            raise TypeError('Too many args passed.')
         return kwargs
 
 
@@ -219,7 +219,7 @@ class Board:
             elif c.upper() in PIECES + ['P']:
                 self._board.append(c)
             else:
-                raise ValueError()
+                raise ValueError(f'Character not recognized in FEN board representation: "{c}"')
         self._en_passant = None if en_passant == '-' else Square(en_passant)
 
     def format(self) -> str:
