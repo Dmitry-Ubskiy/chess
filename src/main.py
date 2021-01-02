@@ -59,6 +59,8 @@ if __name__ == '__main__':
             continue
         if board.is_valid_move(move):
             dsp.show_message(repr(board.disambiguate_move(move)))
+            board.make_move(move)
+            dsp.update_board(board)
         else:
             dsp.show_message('Invalid move!')
 

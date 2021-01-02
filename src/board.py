@@ -344,3 +344,13 @@ class Board:
             return new_move
         new_move.src = next(iter(self.__disambiguate_source_squares(move)))._square_name
         return new_move
+
+    def make_move(self, move: Move):
+        if move.castling is not None:
+            raise NotImplementedError()
+        disambiguated_move = self.disambiguate_move(move)
+        src_square = Square(disambiguated_move.src)
+        dest_square = Square(disambiguated_move.dest)
+        self[dest_square] = self[src_square]
+        self[src_square] = '.'
+        self._active_player = Player.BLACK if self._active_player == Player.WHITE else Player.WHITE
