@@ -388,3 +388,8 @@ class Board:
         self[dest_square] = self[src_square]
         self[src_square] = '.'
         self._active_player = get_opponent(self._active_player)
+
+    def make_move_copy(self, move: Move) -> "Board":
+        new_board = copy.deepcopy(self)
+        new_board.make_move(move)
+        return new_board
