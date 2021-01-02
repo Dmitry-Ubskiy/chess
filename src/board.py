@@ -365,6 +365,21 @@ class Board:
             new_move.capture = 'x'
         return new_move
 
+    def get_move_canonical_form(self, move: Move) -> Move:
+        maximal_form = self.disambiguate_move(move)
+        canonical_move = copy.copy(maximal_form)
+        # minimize src
+        src_addr = maximal_form.src
+        src_file, src_rank = src_addr
+        for src in (None, src_file, src_rank, src_addr):
+            if canonical_move.piece is None and canonical_move.capture is not None:  # pawn capture
+                if src is None:  # pawn captures should specify the file the capture is from
+                    continue
+            canonical_move.src = src
+            if self.is_valid_move(canonical_move):
+                break
+        return canonical_move
+
     def __en_passant_pawn(self) -> Square:
         assert self._en_passant is not None
         # We could just subtract the push direction of the active player, but this seems more explicitly correct
