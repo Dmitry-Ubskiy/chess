@@ -204,7 +204,7 @@ def parse_move(move_notation: str) -> Move:
     return Move()
 
 
-KNIGHT_MOVES = [(dr, p // dr) for dr in (-2, -1, 1, 2) for p in (-2, 2)]  # abs(dr*df) == 2; this generate all moves (2, 1) away
+KNIGHT_MOVES = [(-2, -1), (-2, 1), (-1, 2), (1, 2), (2, 1), (2, -1), (1, -2), (-1, -2)]
 LATERAL_MOVES = [(-1, 0), (0, -1), (0, 1), (1, 0)]
 DIAGONAL_MOVES = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
 KING_MOVES = LATERAL_MOVES + DIAGONAL_MOVES
