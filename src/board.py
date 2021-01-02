@@ -201,6 +201,11 @@ def parse_move(move_notation: str) -> Move:
     return Move()
 
 
+KNIGHT_MOVES = [(dr, p // dr) for dr in (-2, -1, 1, 2) for p in (-2, 2)]  # abs(dr*df) == 2; this generate all moves (2, 1) away
+LATERAL_MOVES = [(-1, 0), (0, -1), (0, 1), (1, 0)]
+DIAGONAL_MOVES = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+KING_MOVES = LATERAL_MOVES + DIAGONAL_MOVES
+
 class Board:
     def __init__(self, fen: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'):
         board_desc, *_ = fen.split()
@@ -225,7 +230,53 @@ class Board:
         return self._board[square._square]
 
     def valid_moves(self, src: Square) -> List[Square]:
-        return []
+        if self.at(src) == '.':
+            return []
+        piece = self.at(src)
+        owner = get_piece_owner(piece)
+        opponent = Player.BLACK if owner == Player.WHITE else Player.WHITE
+        piece = piece.upper()
+        dests = []
+
+        if piece == 'K':
+            for dv in KING_MOVES:  # TODO: self-check
+                s = src + dv
+                if s is not None:
+                    if get_piece_owner(self.at(s)) != owner:  # empty or opponent's
+                        dests.append(s)
+        if piece == 'N':
+            for dv in KNIGHT_MOVES:
+                s = src + dv
+                if s is not None:
+                    if get_piece_owner(self.at(s)) != owner:  # empty or opponent's
+                        dests.append(s)
+        if piece == 'P':
+            rank_dir = 1 if owner == Player.WHITE else -1
+            push_square = src + (0, rank_dir)
+            if push_square is not None and self.at(push_square) == '.':
+                dests.append(push_square)
+            for capture_square in [src + (df, rank_dir) for df in (-1, 1)]:
+                if capture_square is not None:
+                    if capture_square == self._en_passant or get_piece_owner(self.at(capture_square)) == opponent:
+                        dests.append(capture_square)
+
+        def slide(moves):
+            for dv in moves:  # scan in each direction
+                next_square = src + dv
+                while next_square is not None:
+                    controller = get_piece_owner(self.at(next_square))
+                    if controller == owner:
+                        break  # inner loop
+                    dests.append(next_square)
+                    if controller == opponent:
+                        break  # inner loop
+                    next_square += dv
+        if piece == 'R' or piece == 'Q':
+            slide(LATERAL_MOVES)
+        if piece == 'B' or piece == 'Q':
+            slide(DIAGONAL_MOVES)
+
+        return dests
 
     def is_valid_move(self, move: Move, player: Player) -> bool:
         if move.castling is not None:
