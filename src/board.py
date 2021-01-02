@@ -228,6 +228,7 @@ PLAYER_ABBR = {'w': Player.WHITE, 'b': Player.BLACK}
 class Board:
     def __init__(self, fen: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'):
         board_desc, active, castling, en_passant, fifty_move_clock, move_number = fen.split()
+
         self._board = []
         for c in ''.join(reversed(board_desc.split('/'))):
             if c in '12345678':
@@ -238,7 +239,9 @@ class Board:
                 raise ValueError(f'Character not recognized in FEN board representation: "{c}"')
         if len(self._board) != 64:
             raise ValueError('Malformed FEN board representation: wrong number of total squares')
+
         self._active_player = PLAYER_ABBR[active]
+
         self._en_passant = None if en_passant == '-' else Square(en_passant)
 
     def format(self) -> str:
