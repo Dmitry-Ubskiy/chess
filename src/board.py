@@ -29,6 +29,12 @@ def get_piece_owner(piece: str) -> Optional[Player]:
     return None  # neither player (empty space)
 
 
+def get_opponent(player: Player) -> Player:
+    if player == Player.WHITE:
+        return Player.BLACK
+    return Player.WHITE
+
+
 CASTLINGS = ('0-0', '0-0-0')
 PIECES = list('RNBQK')
 FILES = list('abcdefgh')
@@ -246,7 +252,7 @@ class Board:
             return set()
         piece = self[src]
         owner = get_piece_owner(piece)
-        opponent = Player.BLACK if owner == Player.WHITE else Player.WHITE
+        opponent = get_opponent(owner)
         piece = piece.upper()
         dests = set()
 
@@ -361,4 +367,4 @@ class Board:
         dest_square = Square(disambiguated_move.dest)
         self[dest_square] = self[src_square]
         self[src_square] = '.'
-        self._active_player = Player.BLACK if self._active_player == Player.WHITE else Player.WHITE
+        self._active_player = get_opponent(self._active_player)
