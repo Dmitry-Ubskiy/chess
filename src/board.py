@@ -220,6 +220,8 @@ class Board:
                 self._board.append(c)
             else:
                 raise ValueError(f'Character not recognized in FEN board representation: "{c}"')
+        if len(self._board) != 64:
+            raise ValueError('Malformed FEN board representation: wrong number of total squares')
         self._en_passant = None if en_passant == '-' else Square(en_passant)
 
     def format(self) -> str:
