@@ -209,18 +209,14 @@ KING_MOVES = LATERAL_MOVES + DIAGONAL_MOVES
 class Board:
     def __init__(self, fen: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'):
         board_desc, *_ = fen.split()
-        rows = board_desc.split('/')
-        def parse_row(row: str) -> List[str]:
-            parsed = []
-            for c in row:
-                if c in '12345678':
-                    parsed.extend(['.'] * int(c))
-                elif c.upper() in PIECES + ['P']:
-                    parsed.append(c)
-                else:
-                    raise ValueError()
-            return parsed
-        self._board = sum(map(parse_row, reversed(rows)), [])
+        self._board = []
+        for c in ''.join(reversed(board_desc.split('/'))):
+            if c in '12345678':
+                self._board.extend(['.'] * int(c))
+            elif c.upper() in PIECES + ['P']:
+                self._board.append(c)
+            else:
+                raise ValueError()
         self._en_passant = None
 
     def format(self) -> str:
