@@ -208,7 +208,7 @@ KING_MOVES = LATERAL_MOVES + DIAGONAL_MOVES
 
 class Board:
     def __init__(self, fen: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'):
-        board_desc, *_ = fen.split()
+        board_desc, active, castling, en_passant, fifty_move_clock, move_number = fen.split()
         self._board = []
         for c in ''.join(reversed(board_desc.split('/'))):
             if c in '12345678':
@@ -217,7 +217,7 @@ class Board:
                 self._board.append(c)
             else:
                 raise ValueError()
-        self._en_passant = None
+        self._en_passant = None if en_passant == '-' else Square(en_passant)
 
     def format(self) -> str:
         return '\n'.join(reversed([' '.join(row) for row in zip(*[iter(self._board)]*8)]))
