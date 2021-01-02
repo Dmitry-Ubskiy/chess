@@ -4,7 +4,7 @@ import re
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple, Set
 from typing import overload
 
 
@@ -94,6 +94,9 @@ class Square:
 
     def __repr__(self) -> str:
         return self._square_name
+
+    def __hash__(self) -> int:
+        return hash(self._square_name)
 
     @staticmethod
     @overload
@@ -225,36 +228,36 @@ class Board:
     def at(self, square: Square) -> str:
         return self._board[square._square]
 
-    def valid_moves(self, src: Square) -> List[Square]:
+    def valid_moves(self, src: Square) -> Set[Square]:
         if self.at(src) == '.':
-            return []
+            return set()
         piece = self.at(src)
         owner = get_piece_owner(piece)
         opponent = Player.BLACK if owner == Player.WHITE else Player.WHITE
         piece = piece.upper()
-        dests = []
+        dests = set()
 
         if piece == 'K':
             for dv in KING_MOVES:  # TODO: self-check
                 s = src + dv
                 if s is not None:
                     if get_piece_owner(self.at(s)) != owner:  # empty or opponent's
-                        dests.append(s)
+                        dests.add(s)
         if piece == 'N':
             for dv in KNIGHT_MOVES:
                 s = src + dv
                 if s is not None:
                     if get_piece_owner(self.at(s)) != owner:  # empty or opponent's
-                        dests.append(s)
+                        dests.add(s)
         if piece == 'P':
             rank_dir = 1 if owner == Player.WHITE else -1
             push_square = src + (0, rank_dir)
             if push_square is not None and self.at(push_square) == '.':
-                dests.append(push_square)
+                dests.add(push_square)
             for capture_square in [src + (df, rank_dir) for df in (-1, 1)]:
                 if capture_square is not None:
                     if capture_square == self._en_passant or get_piece_owner(self.at(capture_square)) == opponent:
-                        dests.append(capture_square)
+                        dests.add(capture_square)
 
         def slide(moves):
             for dv in moves:  # scan in each direction
@@ -263,7 +266,7 @@ class Board:
                     controller = get_piece_owner(self.at(next_square))
                     if controller == owner:
                         break  # inner loop
-                    dests.append(next_square)
+                    dests.add(next_square)
                     if controller == opponent:
                         break  # inner loop
                     next_square += dv
