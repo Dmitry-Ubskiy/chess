@@ -5,7 +5,7 @@ import re
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Tuple, Set
+from typing import List, Optional, Tuple, Set
 from typing import overload
 
 
@@ -130,7 +130,7 @@ class Square:
             raise TypeError('Empty or malformed arguments to Square.valid_square()')
 
     @staticmethod
-    def __consolidate_overload_args(args, kwargs):
+    def __consolidate_overload_args(args, kwargs) -> dict:
         if len(args) == 0:
             pass  # straight to kwargs
         elif len(args) == 1:
@@ -269,7 +269,7 @@ class Board:
                     if capture_square == self._en_passant or get_piece_owner(self.at(capture_square)) == opponent:
                         dests.add(capture_square)
 
-        def slide(moves):
+        def slide(moves: List[Tuple[int, int]]):
             for dv in moves:  # scan in each direction
                 next_square = src + dv
                 while next_square is not None:
