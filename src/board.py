@@ -173,7 +173,7 @@ def parse_move(move_notation: str) -> Move:
     # <algebraic> ::= <normal> | <promotion>
     #    <normal> ::= (<piece>)? (<src>)? ("x")? <square>
     # <promotion> ::= (<src>)? ("x")? <square> <piece>
-    #      <src> ::= <file> | <rank> | <square>
+    #       <src> ::= <file> | <rank> | <square>
     #    <square> ::= <file> <rank>
     #     <piece> ::= "R" | "N" | "B" | "Q" | "K"
     #      <file> ::= "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h"
