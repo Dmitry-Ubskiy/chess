@@ -25,7 +25,10 @@ class MoveTest(unittest.TestCase):
         )
         self.assertSetEqual(
             board.valid_moves(Square('c3')),
-            set(map(Square, ['c4', 'c5', 'c6', 'c7', 'c8', 'd4', 'e5', 'd3', 'e3', 'd2', 'e1', 'c2', 'c1', 'b2', 'a1', 'b3', 'a3', 'b4', 'a5']))
+            set(map(Square, [
+                'c4', 'c5', 'c6', 'c7', 'c8', 'd3', 'e3', 'c2', 'c1', 'b3', 'a3',  # lateral
+                'd4', 'e5', 'd2', 'e1', 'b2', 'a1', 'b4', 'a5'  # diagonal
+            ]))
         )
 
     def test_pawn_moves(self):
