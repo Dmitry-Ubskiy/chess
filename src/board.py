@@ -280,44 +280,49 @@ class Board:
 
         return dests
 
-    def is_valid_move(self, move: Move) -> bool:
-        if move.castling is not None:
-            return False  # let's not deal with castlings for now
+    def __disambiguate_source_squares(self, move: Move) -> Set[Square]:
         assert move.dest is not None
         dest_square = Square(move.dest)
         piece = format_piece(move.piece or 'P', self._active_player)
         if piece not in self._board:
-            return False
+            return set()
 
-        possible_pieces_count = 0
+        possible_sources = set()
         if move.src is not None:
             if Square.valid_square(move.src):  # explicit, e.g. Ne2g3
                 src_square = Square(move.src)
-                if self.at(src_square) != piece:
-                    return False
-                return dest_square in self.valid_moves(src_square)
+                if self.at(src_square) == piece and dest_square in self.valid_moves(src_square):
+                    return {src_square}
+                return set()
             elif move.src in RANKS:  # e.g. N2g3
                 rank = move.src
                 for file in FILES:
                     src_square = Square(file + rank)
                     if self.at(src_square) == piece:
                         if dest_square in self.valid_moves(src_square):
-                            possible_pieces_count += 1
+                            possible_sources.add(src_square)
             elif move.src in FILES:  # e.g. Neg3
                 file = move.src
                 for rank in RANKS:
                     src_square = Square(file + rank)
                     if self.at(src_square) == piece:
                         if dest_square in self.valid_moves(src_square):
-                            possible_pieces_count += 1
+                            possible_sources.add(src_square)
             else:
                 raise ValueError(f'Malformed move source square: "{move.src}"')
         else:
             piece_index = self._board.index(piece)
             while True:
-                if dest_square in self.valid_moves(Square(piece_index)):
-                    possible_pieces_count += 1
+                src_square = Square(piece_index)
+                if dest_square in self.valid_moves(src_square):
+                    possible_sources.add(src_square)
                 if piece not in self._board[piece_index+1:]:
                     break
                 piece_index = self._board.index(piece, piece_index+1)
-        return possible_pieces_count > 0
+        return possible_sources
+
+    def is_valid_move(self, move: Move) -> bool:
+        if move.castling is not None:
+            return False  # let's not deal with castlings for now
+        assert move.dest is not None
+        return len(self.__disambiguate_source_squares(move)) == 1
