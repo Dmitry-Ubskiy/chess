@@ -166,6 +166,12 @@ class Move:
     def __bool__(self):
         return self.castling is not None or self.dest is not None
 
+    def __repr__(self):
+        if self.castling is not None:
+            return self.castling
+        assert self.dest is not None
+        return ''.join((self.piece or '', self.src or '', self.capture or '', self.dest, self.promotion or ''))
+
 
 def parse_move(move_notation: str) -> Move:
     # Grammar:

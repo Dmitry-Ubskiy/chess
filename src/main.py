@@ -55,7 +55,10 @@ if __name__ == '__main__':
     while True:
         move = parse_move(dsp.get_move())
         if not move:
-            dsp.show_message('Invalid move!')
+            dsp.show_message('Invalid move fmt!')
             continue
-        dsp.show_message(str(board.is_valid_move(move)))
+        if board.is_valid_move(move):
+            dsp.show_message(repr(board.disambiguate_move(move)))
+        else:
+            dsp.show_message('Invalid move!')
 
