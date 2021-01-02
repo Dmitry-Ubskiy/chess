@@ -343,6 +343,8 @@ class Board:
         if new_move.castling is not None:
             return new_move
         new_move.src = next(iter(self.__disambiguate_source_squares(move)))._square_name
+        if self[Square(new_move.dest)] != '.':
+            new_move.capture = 'x'
         return new_move
 
     def make_move(self, move: Move):
