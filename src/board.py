@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import copy
 import re
 
 from dataclasses import dataclass
@@ -326,3 +327,11 @@ class Board:
             return False  # let's not deal with castlings for now
         assert move.dest is not None
         return len(self.__disambiguate_source_squares(move)) == 1
+
+    def disambiguate_move(self, move: Move) -> Move:
+        assert self.is_valid_move(move)
+        new_move = copy.copy(move)
+        if new_move.castling is not None:
+            return new_move
+        new_move.src = next(iter(self.__disambiguate_source_squares(move)))._square_name
+        return new_move
