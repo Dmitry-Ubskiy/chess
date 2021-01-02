@@ -222,6 +222,9 @@ LATERAL_MOVES = [(-1, 0), (0, -1), (0, 1), (1, 0)]
 DIAGONAL_MOVES = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
 KING_MOVES = LATERAL_MOVES + DIAGONAL_MOVES
 
+PUSH_DIRECTION = {Player.WHITE: 1, Player.BLACK: -1}
+PLAYER_ABBR = {'w': Player.WHITE, 'b': Player.BLACK}
+
 class Board:
     def __init__(self, fen: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'):
         board_desc, active, castling, en_passant, fifty_move_clock, move_number = fen.split()
@@ -235,7 +238,7 @@ class Board:
                 raise ValueError(f'Character not recognized in FEN board representation: "{c}"')
         if len(self._board) != 64:
             raise ValueError('Malformed FEN board representation: wrong number of total squares')
-        self._active_player = Player.WHITE if active == 'w' else Player.BLACK
+        self._active_player = PLAYER_ABBR[active]
         self._en_passant = None if en_passant == '-' else Square(en_passant)
 
     def format(self) -> str:
@@ -269,17 +272,17 @@ class Board:
                     if get_piece_owner(self[s]) != owner:  # empty or opponent's
                         dests.add(s)
         if piece == 'P':
-            rank_dir = 1 if owner == Player.WHITE else -1
-            push_square = src + (0, rank_dir)
+            push_dir = PUSH_DIRECTION[owner]
+            push_square = src + (0, push_dir)
             if push_square is not None and self[push_square] == '.':
                 dests.add(push_square)
             # double push; works if pawns can start on 1st rank (double push from original position or 2nd rank)
             home_ranks = (0, 1) if owner == Player.WHITE else (6, 7)  # 0-indexed; rank index 0 == '1'
             if src._rank in home_ranks:
-                double_push_square = push_square + (0, rank_dir)
+                double_push_square = push_square + (0, push_dir)
                 if double_push_square is not None and self[double_push_square] == '.':
                     dests.add(double_push_square)
-            for capture_square in [src + (df, rank_dir) for df in (-1, 1)]:
+            for capture_square in [src + (df, push_dir) for df in (-1, 1)]:
                 if capture_square is not None:
                     if capture_square == self._en_passant or get_piece_owner(self[capture_square]) == opponent:
                         dests.add(capture_square)
