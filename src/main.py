@@ -77,7 +77,7 @@ if __name__ == '__main__':
     while True:
         move = parse_move(dsp.get_move())
         if not move:
-            dsp.show_message('Invalid move fmt!')
+            dsp.show_message('Invalid command!')
             continue
         if board.is_valid_move(move):
             dsp.show_message('')
