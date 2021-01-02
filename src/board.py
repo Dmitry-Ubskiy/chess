@@ -363,6 +363,8 @@ class Board:
         new_move.src = next(iter(self.__disambiguate_source_squares(move)))._square_name
         if self[Square(new_move.dest)] != '.':
             new_move.capture = 'x'
+        elif new_move.piece is None and Square(new_move.dest) == self._en_passant:  # en passant capture
+            new_move.capture = 'x'
         return new_move
 
     def get_move_canonical_form(self, move: Move) -> Move:
