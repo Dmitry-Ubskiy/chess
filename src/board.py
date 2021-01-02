@@ -365,12 +365,26 @@ class Board:
             new_move.capture = 'x'
         return new_move
 
+    def __en_passant_pawn(self) -> Square:
+        assert self._en_passant is not None
+        # We could just subtract the push direction of the active player, but this seems more explicitly correct
+        return self._en_passant + (0, PUSH_DIRECTION[get_opponent(self._active_player)])
+
     def make_move(self, move: Move):
         if move.castling is not None:
             raise NotImplementedError()
         disambiguated_move = self.disambiguate_move(move)
+
         src_square = Square(disambiguated_move.src)
         dest_square = Square(disambiguated_move.dest)
+
+        if disambiguated_move.piece is None and dest_square == self._en_passant:  # en passant capture
+            self[self.__en_passant_pawn()] = '.'
+
+        self._en_passant = None
+        if move.piece is None and abs(src_square._rank - dest_square._rank) == 2:  # double push
+            self._en_passant = Square(src_square._file, (src_square._rank + dest_square._rank) // 2)
+
         self[dest_square] = self[src_square]
         self[src_square] = '.'
         self._active_player = get_opponent(self._active_player)
