@@ -352,8 +352,6 @@ class Board:
 
         piece = self[src]
         src_owner = get_piece_owner(piece)
-        opponent = get_opponent(src_owner)
-        dest_owner = get_piece_owner(self[dest])
         piece = piece.upper()
 
         if piece == 'K':
