@@ -258,7 +258,7 @@ class Board:
     def __setitem__(self, square: Square, value: str):
         self._board[square._square] = value
 
-    def valid_moves(self, src: Square) -> Set[Square]:
+    def legal_moves(self, src: Square) -> Set[Square]:
         if self[src] == '.':
             return set()
         piece = self[src]
@@ -386,7 +386,7 @@ class Board:
         for i, piece in enumerate(self._board):
             if piece == '.' or get_piece_owner(piece) == owner:
                 continue
-            if square in self.valid_moves(Square(i)):
+            if square in self.legal_moves(Square(i)):
                 attackers.add(Square(i))
         return attackers
 
@@ -407,7 +407,7 @@ class Board:
         if move.src is not None:
             if Square.valid_square(move.src):  # explicit, e.g. Ne2g3
                 src_square = Square(move.src)
-                if self[src_square] == piece and dest_square in self.valid_moves(src_square):
+                if self[src_square] == piece and dest_square in self.legal_moves(src_square):
                     return {src_square}
                 return set()
             elif move.src in RANKS:  # e.g. N2g3
@@ -415,14 +415,14 @@ class Board:
                 for file in FILES:
                     src_square = Square(file + rank)
                     if self[src_square] == piece:
-                        if dest_square in self.valid_moves(src_square):
+                        if dest_square in self.legal_moves(src_square):
                             possible_sources.add(src_square)
             elif move.src in FILES:  # e.g. Neg3
                 file = move.src
                 for rank in RANKS:
                     src_square = Square(file + rank)
                     if self[src_square] == piece:
-                        if dest_square in self.valid_moves(src_square):
+                        if dest_square in self.legal_moves(src_square):
                             possible_sources.add(src_square)
             else:
                 raise ValueError(f'Malformed move source square: "{move.src}"')
@@ -430,14 +430,14 @@ class Board:
             piece_index = self._board.index(piece)
             while True:
                 src_square = Square(piece_index)
-                if dest_square in self.valid_moves(src_square):
+                if dest_square in self.legal_moves(src_square):
                     possible_sources.add(src_square)
                 if piece not in self._board[piece_index+1:]:
                     break
                 piece_index = self._board.index(piece, piece_index+1)
         return possible_sources
 
-    def is_valid_move(self, move: Move) -> bool:
+    def is_legal_move(self, move: Move) -> bool:
         if move.castling is not None:
             return False  # let's not deal with castlings for now
         assert move.dest is not None
@@ -445,11 +445,11 @@ class Board:
             dest_square = Square(move.dest)
             if get_piece_owner(self[dest_square]) != get_opponent(self._active_player):  # not normal capture...
                 if move.piece is not None or self._en_passant != dest_square:  # ...nor en passant...
-                    return False  # ...so this move isn't valid!
+                    return False  # ...so this move isn't legal!
         return len(self.__disambiguate_source_squares(move)) == 1
 
     def disambiguate_move(self, move: Move) -> Move:
-        assert self.is_valid_move(move)
+        assert self.is_legal_move(move)
         new_move = copy.copy(move)
         if new_move.castling is not None:
             return new_move
@@ -471,7 +471,7 @@ class Board:
                 if src is None:  # pawn captures should specify the file the capture is from
                     continue
             canonical_move.src = src
-            if self.is_valid_move(canonical_move):
+            if self.is_legal_move(canonical_move):
                 break
         return canonical_move
 

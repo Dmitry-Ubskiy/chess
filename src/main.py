@@ -79,7 +79,7 @@ if __name__ == '__main__':
         if not move:
             dsp.show_message('Invalid command!')
             continue
-        if board.is_valid_move(move):
+        if board.is_legal_move(move):
             dsp.show_message('')
             dsp.add_ply(repr(board.get_move_canonical_form(move)))
             board.make_move(move)
@@ -87,5 +87,5 @@ if __name__ == '__main__':
             if board.is_in_check():
                 dsp.show_message('Check!')
         else:
-            dsp.show_message('Invalid move!')
+            dsp.show_message('Illegal move!')
 
