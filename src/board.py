@@ -319,6 +319,37 @@ class Board:
         if get_piece_owner(self[src]) == get_piece_owner(self[dest]):
             return False  # can't capture own pieces
 
+        if self[src].upper() == 'P':
+            src_owner = get_piece_owner(self[src])
+            dest_owner = get_piece_owner(self[dest])
+            opponent = get_opponent(src_owner)
+            if self.__threatens(src, dest) and dest_owner == opponent:  # valid capture
+                return True
+            # pushes
+            if dest._file != src._file:
+                return False
+            if self[src + (0, PUSH_DIRECTION[src_owner])] != '.':
+                return False  # blocked
+            if src.dist(dest) == 1:  # push
+                return dest._rank - src._rank == PUSH_DIRECTION[src_owner]
+            elif src.dist(dest) == 2:  # double push
+                if src._rank not in HOME_RANKS[src_owner]:
+                    return False
+                if self[dest] != '.':
+                    return False  # blocked
+                return dest._rank - src._rank == 2 * PUSH_DIRECTION[src_owner]
+            else:
+                return False  # dest too far
+        elif self.__threatens(src, dest):
+            return True
+        return False
+
+    def __threatens(self, src: Square, dest: Square) -> bool:
+        if self[src] == '.':
+            return False
+        if get_piece_owner(self[src]) == get_piece_owner(self[dest]):
+            return False  # can't capture own pieces
+
         piece = self[src]
         src_owner = get_piece_owner(piece)
         opponent = get_opponent(src_owner)
@@ -330,21 +361,10 @@ class Board:
         if piece == 'N':
             return dest in (src + dv for dv in KNIGHT_MOVES)
         if piece == 'P':
-            if src.dist(dest) == 1:  # push or capture
+            if src.dist(dest) == 1:  # pawn capture
                 if dest._rank - src._rank != PUSH_DIRECTION[src_owner]:
                     return False  # wrong direction
-                if dest._file == src._file:  # push
-                    return self[dest] == '.'
-                # capture
-                return dest_owner == opponent
-            elif src.dist(dest) == 2:  # double push
-                if src._rank not in HOME_RANKS[src_owner]:
-                    return False
-                if dest._file != src._file:
-                    return False
-                if dest._rank - src._rank != 2 * PUSH_DIRECTION[src_owner]:  # wrong direction
-                    return False
-                return self[src + (0, PUSH_DIRECTION[src_owner])] == '.' and self[dest] == '.'
+                return abs(dest._file - src._file) == 1
             else:
                 return False  # dest too far
         
@@ -376,7 +396,7 @@ class Board:
         for i, piece in enumerate(self._board):
             if piece == '.' or get_piece_owner(piece) != player:
                 continue
-            if self.__is_pseudo_legal(Square(i), square):
+            if self.__threatens(Square(i), square):
                 attackers.add(Square(i))
         return len(attackers) > 0
 
