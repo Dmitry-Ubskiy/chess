@@ -308,6 +308,21 @@ class Board:
 
         return dests
 
+    def __get_square_attackers(self, square: Square) -> Set[Square]:
+        attackers = set()
+        owner = get_piece_owner(self[square])
+        for i, piece in enumerate(self._board):
+            if piece == '.' or get_piece_owner(piece) == owner:
+                continue
+            if square in self.valid_moves(Square(i)):
+                attackers.add(Square(i))
+        return attackers
+
+    def is_in_check(self) -> bool:
+        king = format_piece('K', self._active_player)
+        king_square = Square(self._board.index(king))
+        return len(self.__get_square_attackers(king_square)) > 0
+
     def __disambiguate_source_squares(self, move: Move) -> Set[Square]:
         assert move.dest is not None
         dest_square = Square(move.dest)

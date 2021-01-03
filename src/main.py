@@ -84,6 +84,8 @@ if __name__ == '__main__':
             dsp.add_ply(repr(board.get_move_canonical_form(move)))
             board.make_move(move)
             dsp.update_board(board)
+            if board.is_in_check():
+                dsp.show_message('Check!')
         else:
             dsp.show_message('Invalid move!')
 
