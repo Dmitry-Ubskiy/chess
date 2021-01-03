@@ -88,7 +88,7 @@ class Square:
         else:
             raise TypeError('Empty or malformed arguments to Square()')
 
-    def __eq__(self, other: "Square") -> bool:
+    def __eq__(self, other) -> bool:
         if type(other) != Square:
             return False
         return self._square == other._square
