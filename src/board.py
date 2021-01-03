@@ -105,6 +105,10 @@ class Square:
     def __hash__(self) -> int:
         return hash(self._square_name)
 
+    def dist(self, other: "Square") -> int:
+        # L_oo
+        return max(abs(self._file - other._file), abs(self._rank - other._rank))
+
     @staticmethod
     @overload
     def valid_square(square_name: str) -> bool:
