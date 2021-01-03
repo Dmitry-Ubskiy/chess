@@ -308,6 +308,10 @@ class Board:
 
         return dests
 
+    def __is_threatened_by(self, square: Square, player: Player) -> bool:
+        attackers = self.__get_square_attackers(square)
+        return any(map(lambda s: get_piece_owner(self[s]) == player, attackers))
+
     def __get_square_attackers(self, square: Square) -> Set[Square]:
         attackers = set()
         owner = get_piece_owner(self[square])
@@ -321,7 +325,8 @@ class Board:
     def is_in_check(self) -> bool:
         king = format_piece('K', self._active_player)
         king_square = Square(self._board.index(king))
-        return len(self.__get_square_attackers(king_square)) > 0
+        opponent = get_opponent(self._active_player)
+        return self.__is_threatened_by(king_square, opponent)
 
     def __disambiguate_source_squares(self, move: Move) -> Set[Square]:
         assert move.dest is not None
