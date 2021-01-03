@@ -228,6 +228,7 @@ KING_MOVES = LATERAL_MOVES + DIAGONAL_MOVES
 
 PUSH_DIRECTION = {Player.WHITE: 1, Player.BLACK: -1}
 PLAYER_ABBR = {'w': Player.WHITE, 'b': Player.BLACK}
+HOME_RANKS = {Player.WHITE: (0, 1), Player.BLACK: (6, 7)}  # 0-indexed; rank index 0 == '1'
 
 class Board:
     def __init__(self, fen: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'):
@@ -284,8 +285,7 @@ class Board:
             if push_square is not None and self[push_square] == '.':
                 dests.add(push_square)
             # double push; works if pawns can start on 1st rank (double push from original position or 2nd rank)
-            home_ranks = (0, 1) if owner == Player.WHITE else (6, 7)  # 0-indexed; rank index 0 == '1'
-            if src._rank in home_ranks:
+            if src._rank in HOME_RANKS[owner]:
                 double_push_square = push_square + (0, push_dir)
                 if double_push_square is not None and self[double_push_square] == '.':
                     dests.add(double_push_square)
