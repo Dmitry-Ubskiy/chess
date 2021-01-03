@@ -425,6 +425,9 @@ class Board:
         opponent = get_opponent(self._active_player)
         return self.__is_threatened_by(king_square, opponent)
 
+    def is_mated(self) -> bool:
+        return self.is_in_check() and len(self.get_all_legal_moves()) == 0
+
     def __disambiguate_source_squares(self, move: Move) -> Set[Square]:
         assert move.dest is not None
         dest_square = Square(move.dest)

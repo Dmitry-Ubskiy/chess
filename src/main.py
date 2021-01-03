@@ -85,7 +85,10 @@ if __name__ == '__main__':
             board.make_move(move)
             dsp.update_board(board)
             if board.is_in_check():
-                dsp.show_message('Check!')
+                if board.is_mated():
+                    dsp.show_message('Checkmate!')
+                else:
+                    dsp.show_message('Check!')
         else:
             dsp.show_message('Illegal move!')
 
