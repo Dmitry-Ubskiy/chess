@@ -182,6 +182,9 @@ class Move:
         assert self.dest is not None
         return ''.join((self.piece or '', self.src or '', self.capture or '', self.dest, self.promotion or ''))
 
+    def __hash__(self) -> int:
+        return hash(repr(self))
+
 
 def parse_move(move_notation: str) -> Move:
     # Grammar:
@@ -343,6 +346,14 @@ class Board:
         elif self.__threatens(src, dest):
             return True
         return False
+
+    def get_all_legal_moves(self) -> Set[Move]:
+        moves = set()
+        for i, piece in enumerate(self._board):
+            if get_piece_owner(piece) != self._active_player:
+                continue
+            moves |= {Move(piece=piece, src=Square(i)._square_name, dest=s._square_name) for s in self.legal_moves(Square(i))}
+        return moves
 
     def __threatens(self, src: Square, dest: Square) -> bool:
         if self[src] == '.':
