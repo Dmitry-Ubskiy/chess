@@ -271,11 +271,27 @@ class Board:
         dests = set()
 
         if piece == 'K':
-            for dv in KING_MOVES:  # TODO: self-check
+            for dv in KING_MOVES:
                 s = src + dv
                 if s is not None:
+                    if self.__is_threatened_by(s, opponent):  # moving into check
+                        continue
                     if get_piece_owner(self[s]) != owner:  # empty or opponent's
                         dests.add(s)
+
+        king = format_piece('K', owner)
+        king_square = Square(self._board.index(king))
+        checkers = self.__get_square_attackers(king_square)
+        if len(checkers) > 1:
+            return dests  # only legal moves are king's
+        elif len(checkers) == 1:
+            checker_square = next(iter(checkers))
+            # TODO can capture checker?
+            checker_piece = self[checker_square]
+            if checker_piece in ['R', 'B', 'Q']:  # blockable
+                pass  # TODO can block?
+            return dests
+
         if piece == 'N':
             for dv in KNIGHT_MOVES:
                 s = src + dv
@@ -355,15 +371,18 @@ class Board:
             moves |= {Move(piece=piece, src=Square(i)._square_name, dest=s._square_name) for s in self.legal_moves(Square(i))}
         return moves
 
-    def __threatens(self, src: Square, dest: Square) -> bool:
+    def __threatens_check(self, src: Square, dest: Square) -> bool:
         if self[src] == '.':
             return False
-        if get_piece_owner(self[src]) == get_piece_owner(self[dest]):
-            return False  # can't capture own pieces
 
         piece = self[src]
         src_owner = get_piece_owner(piece)
         piece = piece.upper()
+
+        king = format_piece('K', get_opponent(src_owner))
+        king_square = Square(self._board.index(king))
+        xray_board = copy.deepcopy(self)
+        xray_board[king_square] = '.'
 
         if piece == 'K':
             return src.dist(dest) == 1
@@ -392,7 +411,7 @@ class Board:
             dv = (sgn(dest._file - src._file), sgn(dest._rank - src._rank))
             next_square = src + dv
             while next_square != dest:
-                if self[next_square] != '.':  # obstacle
+                if xray_board[next_square] != '.':  # obstacle
                     return False
                 next_square += dv
             return True  # got to dest with no obstacles
@@ -405,7 +424,7 @@ class Board:
         for i, piece in enumerate(self._board):
             if piece == '.' or get_piece_owner(piece) != player:
                 continue
-            if self.__threatens(Square(i), square):
+            if self.__threatens_check(Square(i), square):
                 attackers.add(Square(i))
         return len(attackers) > 0
 
@@ -415,7 +434,7 @@ class Board:
         for i, piece in enumerate(self._board):
             if piece == '.' or get_piece_owner(piece) == owner:
                 continue
-            if square in self.legal_moves(Square(i)):
+            if self.__threatens_check(Square(i), square):
                 attackers.add(Square(i))
         return attackers
 
