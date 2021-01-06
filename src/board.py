@@ -444,9 +444,8 @@ class Board:
             for dv in moves:  # scan in each direction
                 next_square = src + dv
                 while next_square is not None:
-                    if not self.__is_legal(src, next_square):
-                        break  # inner loop
-                    dests.add(next_square)
+                    if self.__is_legal(src, next_square):
+                        dests.add(next_square)
                     next_square += dv
         if piece == 'R' or piece == 'Q':
             slide(LATERAL_MOVES)
