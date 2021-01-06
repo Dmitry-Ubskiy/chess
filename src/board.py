@@ -409,7 +409,6 @@ class Board:
             return set()
         piece = self[src]
         owner = get_piece_owner(piece)
-        opponent = get_opponent(owner)
         piece = piece.upper()
         dests = set()
 
