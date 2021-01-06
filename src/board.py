@@ -277,7 +277,7 @@ class Board:
             src_owner = get_piece_owner(self[src])
             dest_owner = get_piece_owner(self[dest])
             opponent = get_opponent(src_owner)
-            if self.__threatens(src, dest) and dest_owner == opponent:  # valid capture
+            if self.__threatens(src, dest) and (dest_owner == opponent or dest == self._en_passant):  # valid capture
                 return True
             # pushes
             if dest._file != src._file:
