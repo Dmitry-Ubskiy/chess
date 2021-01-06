@@ -417,55 +417,37 @@ class Board:
             for dv in KING_MOVES:
                 s = src + dv
                 if s is not None:
-                    if self.__is_threatened_by(s, opponent):  # moving into check
-                        continue
-                    if get_piece_owner(self[s]) != owner:  # empty or opponent's
+                    if self.__is_legal(src, s):
                         dests.add(s)
-
-        king = format_piece('K', owner)
-        king_square = Square(self._board.index(king))
-        checkers = self.__get_square_attackers(king_square)
-        if len(checkers) > 1:
-            return dests  # only legal moves are king's
-        elif len(checkers) == 1:
-            checker_square = next(iter(checkers))
-            # TODO can capture checker?
-            checker_piece = self[checker_square]
-            if checker_piece in ['R', 'B', 'Q']:  # blockable
-                pass  # TODO can block?
-            return dests
 
         if piece == 'N':
             for dv in KNIGHT_MOVES:
                 s = src + dv
                 if s is not None:
-                    if get_piece_owner(self[s]) != owner:  # empty or opponent's
+                    if self.__is_legal(src, s):
                         dests.add(s)
         if piece == 'P':
             push_dir = PUSH_DIRECTION[owner]
             push_square = src + (0, push_dir)
-            if push_square is not None and self[push_square] == '.':
+            if push_square is not None and self.__is_legal(src, push_square):
                 dests.add(push_square)
-            # double push; works if pawns can start on 1st rank (double push from original position or 2nd rank)
-            if src._rank in HOME_RANKS[owner]:
-                double_push_square = push_square + (0, push_dir)
-                if double_push_square is not None and self[double_push_square] == '.':
-                    dests.add(double_push_square)
+                # double push; works if pawns can start on 1st rank (double push from original position or 2nd rank)
+                if src._rank in HOME_RANKS[owner]:
+                    double_push_square = push_square + (0, push_dir)
+                    if double_push_square is not None and self.__is_legal(src, double_push_square):
+                        dests.add(double_push_square)
             for capture_square in [src + (df, push_dir) for df in (-1, 1)]:
                 if capture_square is not None:
-                    if capture_square == self._en_passant or get_piece_owner(self[capture_square]) == opponent:
+                    if self.__is_legal(src, capture_square):
                         dests.add(capture_square)
 
         def slide(moves: List[Tuple[int, int]]):
             for dv in moves:  # scan in each direction
                 next_square = src + dv
                 while next_square is not None:
-                    controller = get_piece_owner(self[next_square])
-                    if controller == owner:
+                    if not self.__is_legal(src, next_square):
                         break  # inner loop
                     dests.add(next_square)
-                    if controller == opponent:
-                        break  # inner loop
                     next_square += dv
         if piece == 'R' or piece == 'Q':
             slide(LATERAL_MOVES)
