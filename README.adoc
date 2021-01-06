@@ -1,4 +1,4 @@
 = Simple curses-based chess
 
-image::sample.gif
+image::sample.gif[Sample]
 
