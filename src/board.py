@@ -493,7 +493,7 @@ class Board:
         if move.src is not None:
             if Square.valid_square(move.src):  # explicit, e.g. Ne2g3
                 src_square = Square(move.src)
-                if self[src_square] == piece and dest_square in self.legal_moves(src_square):
+                if self[src_square] == piece:
                     return {src_square}
                 return set()
             elif move.src in RANKS:  # e.g. N2g3
