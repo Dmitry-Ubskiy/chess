@@ -516,7 +516,6 @@ class Board:
         return True
 
     def disambiguate_move(self, move: Move) -> Move:
-        assert self.is_legal_move(move)
         new_move = copy.copy(move)
         if new_move.castling is not None:
             return new_move
