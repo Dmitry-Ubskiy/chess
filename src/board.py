@@ -438,10 +438,12 @@ class Board:
                 attackers.add(Square(i))
         return attackers
 
-    def is_in_check(self) -> bool:
-        king = format_piece('K', self._active_player)
+    def is_in_check(self, player: Optional[Player] = None) -> bool:
+        if player is None:
+            player = self._active_player
+        king = format_piece('K', player)
         king_square = Square(self._board.index(king))
-        opponent = get_opponent(self._active_player)
+        opponent = get_opponent(player)
         return self.__is_threatened_by(king_square, opponent)
 
     def is_mated(self) -> bool:
