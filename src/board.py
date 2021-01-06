@@ -431,11 +431,11 @@ class Board:
             push_square = src + (0, push_dir)
             if push_square is not None and self.__is_legal(src, push_square):
                 dests.add(push_square)
-                # double push; works if pawns can start on 1st rank (double push from original position or 2nd rank)
-                if src._rank in HOME_RANKS[owner]:
-                    double_push_square = push_square + (0, push_dir)
-                    if double_push_square is not None and self.__is_legal(src, double_push_square):
-                        dests.add(double_push_square)
+            # double push; works if pawns can start on 1st rank (double push from original position or 2nd rank)
+            if src._rank in HOME_RANKS[owner]:
+                double_push_square = push_square + (0, push_dir)
+                if double_push_square is not None and self.__is_legal(src, double_push_square):
+                    dests.add(double_push_square)
             for capture_square in [src + (df, push_dir) for df in (-1, 1)]:
                 if capture_square is not None:
                     if self.__is_legal(src, capture_square):
