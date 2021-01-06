@@ -261,75 +261,10 @@ class Board:
     def __setitem__(self, square: Square, value: str):
         self._board[square._square] = value
 
-    def legal_moves(self, src: Square) -> Set[Square]:
-        if self[src] == '.':
-            return set()
-        piece = self[src]
-        owner = get_piece_owner(piece)
-        opponent = get_opponent(owner)
-        piece = piece.upper()
-        dests = set()
-
-        if piece == 'K':
-            for dv in KING_MOVES:
-                s = src + dv
-                if s is not None:
-                    if self.__is_threatened_by(s, opponent):  # moving into check
-                        continue
-                    if get_piece_owner(self[s]) != owner:  # empty or opponent's
-                        dests.add(s)
-
-        king = format_piece('K', owner)
-        king_square = Square(self._board.index(king))
-        checkers = self.__get_square_attackers(king_square)
-        if len(checkers) > 1:
-            return dests  # only legal moves are king's
-        elif len(checkers) == 1:
-            checker_square = next(iter(checkers))
-            # TODO can capture checker?
-            checker_piece = self[checker_square]
-            if checker_piece in ['R', 'B', 'Q']:  # blockable
-                pass  # TODO can block?
-            return dests
-
-        if piece == 'N':
-            for dv in KNIGHT_MOVES:
-                s = src + dv
-                if s is not None:
-                    if get_piece_owner(self[s]) != owner:  # empty or opponent's
-                        dests.add(s)
-        if piece == 'P':
-            push_dir = PUSH_DIRECTION[owner]
-            push_square = src + (0, push_dir)
-            if push_square is not None and self[push_square] == '.':
-                dests.add(push_square)
-            # double push; works if pawns can start on 1st rank (double push from original position or 2nd rank)
-            if src._rank in HOME_RANKS[owner]:
-                double_push_square = push_square + (0, push_dir)
-                if double_push_square is not None and self[double_push_square] == '.':
-                    dests.add(double_push_square)
-            for capture_square in [src + (df, push_dir) for df in (-1, 1)]:
-                if capture_square is not None:
-                    if capture_square == self._en_passant or get_piece_owner(self[capture_square]) == opponent:
-                        dests.add(capture_square)
-
-        def slide(moves: List[Tuple[int, int]]):
-            for dv in moves:  # scan in each direction
-                next_square = src + dv
-                while next_square is not None:
-                    controller = get_piece_owner(self[next_square])
-                    if controller == owner:
-                        break  # inner loop
-                    dests.add(next_square)
-                    if controller == opponent:
-                        break  # inner loop
-                    next_square += dv
-        if piece == 'R' or piece == 'Q':
-            slide(LATERAL_MOVES)
-        if piece == 'B' or piece == 'Q':
-            slide(DIAGONAL_MOVES)
-
-        return dests
+    def __en_passant_pawn(self) -> Square:
+        assert self._en_passant is not None
+        # We could just subtract the push direction of the active player, but this seems more explicitly correct
+        return self._en_passant + (0, PUSH_DIRECTION[get_opponent(self._active_player)])
 
     def __is_pseudo_legal(self, src: Square, dest: Square) -> bool:
         # pseudo-legal: can move src to dest by basic rules, without considering checks
@@ -362,14 +297,6 @@ class Board:
         elif self.__threatens(src, dest):
             return True
         return False
-
-    def get_all_legal_moves(self) -> Set[Move]:
-        moves = set()
-        for i, piece in enumerate(self._board):
-            if get_piece_owner(piece) != self._active_player:
-                continue
-            moves |= {Move(piece=piece, src=Square(i)._square_name, dest=s._square_name) for s in self.legal_moves(Square(i))}
-        return moves
 
     def __threatens(self, src: Square, dest: Square) -> bool:
         if self[src] == '.':
@@ -446,6 +373,112 @@ class Board:
     def is_mated(self) -> bool:
         return self.is_in_check() and len(self.get_all_legal_moves()) == 0
 
+    def __is_in_legal_state(self) -> bool:
+        # Conditions for board legality:
+        # - Two kings: k and K
+        # - Opposing player's king is not in check
+        if 'k' not in self._board or 'K' not in self._board:
+            return False
+        if self.is_in_check(get_opponent(self._active_player)):
+            return False
+        return True
+
+    def is_legal_move(self, move: Move) -> bool:
+        if move.castling is not None:
+            return False  # let's not deal with castlings for now
+        assert move.dest is not None
+        dest_square = Square(move.dest)
+        if move.capture is not None:  # if you say you capture, you better actually capture something
+            if get_piece_owner(self[dest_square]) != get_opponent(self._active_player):  # not normal capture...
+                if move.piece is not None or self._en_passant != dest_square:  # ...nor en passant...
+                    return False  # ...so this move isn't legal!
+        possible_sources = self.__disambiguate_source_squares(move)
+        if len(self.__disambiguate_source_squares(move)) != 1:
+            return False
+        src_square = next(iter(possible_sources))
+        if not self.__is_pseudo_legal(src_square, dest_square):
+            return False
+        aftermath = self.make_move_copy(move)
+        return aftermath.__is_in_legal_state()
+
+    def legal_moves(self, src: Square) -> Set[Square]:
+        if self[src] == '.':
+            return set()
+        piece = self[src]
+        owner = get_piece_owner(piece)
+        opponent = get_opponent(owner)
+        piece = piece.upper()
+        dests = set()
+
+        if piece == 'K':
+            for dv in KING_MOVES:
+                s = src + dv
+                if s is not None:
+                    if self.__is_threatened_by(s, opponent):  # moving into check
+                        continue
+                    if get_piece_owner(self[s]) != owner:  # empty or opponent's
+                        dests.add(s)
+
+        king = format_piece('K', owner)
+        king_square = Square(self._board.index(king))
+        checkers = self.__get_square_attackers(king_square)
+        if len(checkers) > 1:
+            return dests  # only legal moves are king's
+        elif len(checkers) == 1:
+            checker_square = next(iter(checkers))
+            # TODO can capture checker?
+            checker_piece = self[checker_square]
+            if checker_piece in ['R', 'B', 'Q']:  # blockable
+                pass  # TODO can block?
+            return dests
+
+        if piece == 'N':
+            for dv in KNIGHT_MOVES:
+                s = src + dv
+                if s is not None:
+                    if get_piece_owner(self[s]) != owner:  # empty or opponent's
+                        dests.add(s)
+        if piece == 'P':
+            push_dir = PUSH_DIRECTION[owner]
+            push_square = src + (0, push_dir)
+            if push_square is not None and self[push_square] == '.':
+                dests.add(push_square)
+            # double push; works if pawns can start on 1st rank (double push from original position or 2nd rank)
+            if src._rank in HOME_RANKS[owner]:
+                double_push_square = push_square + (0, push_dir)
+                if double_push_square is not None and self[double_push_square] == '.':
+                    dests.add(double_push_square)
+            for capture_square in [src + (df, push_dir) for df in (-1, 1)]:
+                if capture_square is not None:
+                    if capture_square == self._en_passant or get_piece_owner(self[capture_square]) == opponent:
+                        dests.add(capture_square)
+
+        def slide(moves: List[Tuple[int, int]]):
+            for dv in moves:  # scan in each direction
+                next_square = src + dv
+                while next_square is not None:
+                    controller = get_piece_owner(self[next_square])
+                    if controller == owner:
+                        break  # inner loop
+                    dests.add(next_square)
+                    if controller == opponent:
+                        break  # inner loop
+                    next_square += dv
+        if piece == 'R' or piece == 'Q':
+            slide(LATERAL_MOVES)
+        if piece == 'B' or piece == 'Q':
+            slide(DIAGONAL_MOVES)
+
+        return dests
+
+    def get_all_legal_moves(self) -> Set[Move]:
+        moves = set()
+        for i, piece in enumerate(self._board):
+            if get_piece_owner(piece) != self._active_player:
+                continue
+            moves |= {Move(piece=piece, src=Square(i)._square_name, dest=s._square_name) for s in self.legal_moves(Square(i))}
+        return moves
+
     def __disambiguate_source_squares(self, move: Move) -> Set[Square]:
         assert move.dest is not None
         dest_square = Square(move.dest)
@@ -487,34 +520,6 @@ class Board:
                 piece_index = self._board.index(piece, piece_index+1)
         return possible_sources
 
-    def is_legal_move(self, move: Move) -> bool:
-        if move.castling is not None:
-            return False  # let's not deal with castlings for now
-        assert move.dest is not None
-        dest_square = Square(move.dest)
-        if move.capture is not None:  # if you say you capture, you better actually capture something
-            if get_piece_owner(self[dest_square]) != get_opponent(self._active_player):  # not normal capture...
-                if move.piece is not None or self._en_passant != dest_square:  # ...nor en passant...
-                    return False  # ...so this move isn't legal!
-        possible_sources = self.__disambiguate_source_squares(move)
-        if len(self.__disambiguate_source_squares(move)) != 1:
-            return False
-        src_square = next(iter(possible_sources))
-        if not self.__is_pseudo_legal(src_square, dest_square):
-            return False
-        aftermath = self.make_move_copy(move)
-        return aftermath.__is_in_legal_state()
-
-    def __is_in_legal_state(self) -> bool:
-        # Conditions for board legality:
-        # - Two kings: k and K
-        # - Opposing player's king is not in check
-        if 'k' not in self._board or 'K' not in self._board:
-            return False
-        if self.is_in_check(get_opponent(self._active_player)):
-            return False
-        return True
-
     def disambiguate_move(self, move: Move) -> Move:
         new_move = copy.copy(move)
         if new_move.castling is not None:
@@ -540,11 +545,6 @@ class Board:
             if self.is_legal_move(canonical_move):
                 break
         return canonical_move
-
-    def __en_passant_pawn(self) -> Square:
-        assert self._en_passant is not None
-        # We could just subtract the push direction of the active player, but this seems more explicitly correct
-        return self._en_passant + (0, PUSH_DIRECTION[get_opponent(self._active_player)])
 
     def make_move(self, move: Move):
         if move.castling is not None:
