@@ -344,13 +344,7 @@ class Board:
         return False
 
     def __is_threatened_by(self, square: Square, player: Player) -> bool:
-        attackers = set()
-        for i, piece in enumerate(self._board):
-            if piece == '.' or get_piece_owner(piece) != player:
-                continue
-            if self.__threatens(Square(i), square):
-                attackers.add(Square(i))
-        return len(attackers) > 0
+        return any(map(lambda s: get_piece_owner(self[s]) == player, self.__get_square_attackers(square)))
 
     def __get_square_attackers(self, square: Square) -> Set[Square]:
         attackers = set()
