@@ -1,3 +1,4 @@
 = Simple curses-based chess
 
+image::sample.gif
 
