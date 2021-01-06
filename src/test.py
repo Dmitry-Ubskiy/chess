@@ -2,7 +2,7 @@
 
 import unittest
 
-from board import Board, Square
+from board import Board, Square, Move
 
 
 class MoveTest(unittest.TestCase):
@@ -52,6 +52,12 @@ class MoveTest(unittest.TestCase):
             board.legal_moves(Square('f4')),
             set(map(Square, ['f5', 'g5', 'g4', 'g3', 'f3', 'e3']))
         )
+
+
+class DiscoveredCheckTest(unittest.TestCase):
+    def test_en_passant(self):
+        board = Board('8/8/8/8/k2Pp2Q/8/8/3K4 b - d3 0 1')
+        self.assertFalse(board.is_legal_move(Move(src='e4', dest='d3')))
 
 
 if __name__ == '__main__':
