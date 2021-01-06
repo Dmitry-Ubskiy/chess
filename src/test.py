@@ -23,6 +23,7 @@ class MoveTest(unittest.TestCase):
             board.legal_moves(Square('e3')),
             set(map(Square, ['d3', 'c3', 'e4', 'f3', 'g3', 'h3', 'e2', 'e1']))
         )
+        board = Board('8/8/8/4B3/8/2q1R3/8/1k5K b - - 0 1')
         self.assertSetEqual(
             board.legal_moves(Square('c3')),
             set(map(Square, [
@@ -43,11 +44,12 @@ class MoveTest(unittest.TestCase):
         )
 
     def test_king_moves(self):
-        board = Board('8/8/8/3k4/5K2/8/8/8 w - g6 0 1')
+        board = Board('8/8/8/3k4/5K2/8/8/8 b - - 0 1')
         self.assertSetEqual(
             board.legal_moves(Square('d5')),
             set(map(Square, ['c6', 'd6', 'e6', 'd4', 'c4', 'c5']))
         )
+        board = Board('8/8/8/3k4/5K2/8/8/8 w - - 0 1')
         self.assertSetEqual(
             board.legal_moves(Square('f4')),
             set(map(Square, ['f5', 'g5', 'g4', 'g3', 'f3', 'e3']))
