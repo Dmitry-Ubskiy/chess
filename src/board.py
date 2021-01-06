@@ -491,12 +491,29 @@ class Board:
         if move.castling is not None:
             return False  # let's not deal with castlings for now
         assert move.dest is not None
+        dest_square = Square(move.dest)
         if move.capture is not None:  # if you say you capture, you better actually capture something
-            dest_square = Square(move.dest)
             if get_piece_owner(self[dest_square]) != get_opponent(self._active_player):  # not normal capture...
                 if move.piece is not None or self._en_passant != dest_square:  # ...nor en passant...
                     return False  # ...so this move isn't legal!
-        return len(self.__disambiguate_source_squares(move)) == 1
+        possible_sources = self.__disambiguate_source_squares(move)
+        if len(self.__disambiguate_source_squares(move)) != 1:
+            return False
+        src_square = next(iter(possible_sources))
+        if not self.__is_pseudo_legal(src_square, dest_square):
+            return False
+        aftermath = self.make_move_copy(move)
+        return aftermath.__is_in_legal_state()
+
+    def __is_in_legal_state(self) -> bool:
+        # Conditions for board legality:
+        # - Two kings: k and K
+        # - Opposing player's king is not in check
+        if 'k' not in self._board or 'K' not in self._board:
+            return False
+        if self.is_in_check(get_opponent(self._active_player)):
+            return False
+        return True
 
     def disambiguate_move(self, move: Move) -> Move:
         assert self.is_legal_move(move)
