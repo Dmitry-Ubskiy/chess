@@ -377,6 +377,15 @@ class Board:
             return False
         return True
 
+    def __is_legal(self, src: Square, dest: Square) -> bool:
+        if not self.__is_pseudo_legal(src, dest):
+            return False
+        piece = self[src].upper()
+        if piece == 'P':
+            piece = None
+        aftermath = self.make_move_copy(Move(piece=piece, src=src._square_name, dest=dest._square_name))
+        return aftermath.__is_in_legal_state()
+
     def is_legal_move(self, move: Move) -> bool:
         if move.castling is not None:
             return False  # let's not deal with castlings for now
@@ -390,10 +399,10 @@ class Board:
         if len(self.__disambiguate_source_squares(move)) != 1:
             return False
         src_square = next(iter(possible_sources))
-        if not self.__is_pseudo_legal(src_square, dest_square):
+        piece = self[src_square].upper()
+        if piece != move.piece and not (move.piece is None and piece == 'P'):
             return False
-        aftermath = self.make_move_copy(move)
-        return aftermath.__is_in_legal_state()
+        return self.__is_legal(src_square, dest_square)
 
     def legal_moves(self, src: Square) -> Set[Square]:
         if self[src] == '.':
