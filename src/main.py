@@ -81,14 +81,15 @@ if __name__ == '__main__':
             continue
         if board.is_legal_move(move):
             dsp.show_message('')
-            dsp.add_ply(repr(board.get_move_canonical_form(move)))
+            formatted_move = repr(board.get_move_canonical_form(move))
             board.make_move(move)
             dsp.update_board(board)
             if board.is_in_check():
                 if board.is_mated():
-                    dsp.show_message('Checkmate!')
+                    formatted_move += '#'
                 else:
-                    dsp.show_message('Check!')
+                    formatted_move += '+'
+            dsp.add_ply(formatted_move)
         else:
             dsp.show_message('Illegal move!')
 
