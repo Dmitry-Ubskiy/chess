@@ -2,7 +2,7 @@
 
 import curses
 
-from board import Board
+from board import Board, Player
 from board import parse_move
 
 
@@ -12,15 +12,13 @@ MOVE_LOG_LINE_LEN = MOVE_NR_WIDTH + 1 + MOVE_MAX_LEN + 2 + MOVE_MAX_LEN
 
 
 class Display:
-    def __init__(self):
+    def __init__(self, board: Board):
         self._stdscr = curses.initscr()
         curses.start_color()
         self._board_display = self._stdscr.subwin(8, 16, 1, 2)
         self._input_line = self._stdscr.subwin(1, 19, 11, 0)
         self._messages = self._stdscr.subwin(1, 20 + MOVE_LOG_LINE_LEN, 13, 0)
 
-        self._current_move = 1
-        self._white_ply = True
         self._move_log = curses.newpad(12, MOVE_LOG_LINE_LEN)
 
         curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
@@ -36,6 +34,12 @@ class Display:
 
         self._input_line.bkgd(curses.color_pair(1))
         self._input_line.refresh()
+
+        self._start_move = board._move_number
+        self._current_move = 0
+        self._white_ply = True
+        if board._active_player == Player.BLACK:
+            self.add_ply('...')
 
     def __del__(self):
         curses.endwin()
@@ -56,10 +60,10 @@ class Display:
 
     def add_ply(self, ply: str):
         if self._white_ply:
-            self._move_log.addstr(self._current_move - 1, 0, f'{self._current_move:3d}. {ply}')
+            self._move_log.addstr(self._current_move, 0, f'{self._current_move+self._start_move:3d}. {ply}')
         else:
-            self._move_log.addstr(self._current_move - 1, MOVE_LOG_LINE_LEN - MOVE_MAX_LEN, ply)
-        self._move_log.refresh(max(0, self._current_move - 12), 0, 0, 20, 12, 20 + MOVE_LOG_LINE_LEN)
+            self._move_log.addstr(self._current_move, MOVE_LOG_LINE_LEN - MOVE_MAX_LEN, ply)
+        self._move_log.refresh(max(0, self._current_move - 11), 0, 0, 20, 12, 20 + MOVE_LOG_LINE_LEN)
         if not self._white_ply:
             self._current_move += 1
             h, w = self._move_log.getmaxyx()
@@ -71,7 +75,7 @@ class Display:
 if __name__ == '__main__':
     board = Board()
 
-    dsp = Display()
+    dsp = Display(board)
     dsp.update_board(board)
 
     while True:
