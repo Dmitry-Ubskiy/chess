@@ -4,6 +4,7 @@ import curses
 
 from board import Board, Player
 from board import parse_move
+from bot import dummy_bot
 
 
 MOVE_MAX_LEN = 6  # Qd1xg4
@@ -85,15 +86,25 @@ if __name__ == '__main__':
             continue
         if board.is_legal_move(move):
             dsp.show_message('')
-            formatted_move = repr(board.get_move_canonical_form(move))
-            board.make_move(move)
-            dsp.update_board(board)
-            if board.is_in_check():
-                if board.is_mated():
-                    formatted_move += '#'
-                else:
-                    formatted_move += '+'
-            dsp.add_ply(formatted_move)
+            
+            def handle_ply(move):
+                formatted_move = repr(board.get_move_canonical_form(move))
+                board.make_move(move)
+                dsp.update_board(board)
+                if board.is_in_check():
+                    if board.is_mated():
+                        formatted_move += '#'
+                    else:
+                        formatted_move += '+'
+                dsp.add_ply(formatted_move)
+
+            handle_ply(move)
+            if board.is_mated():
+                break
+            handle_ply(dummy_bot(board))
+            if board.is_mated():
+                break
         else:
             dsp.show_message('Illegal move!')
+    dsp.get_move()
 
