@@ -265,7 +265,6 @@ class Board:
                     self._available_castlings['K'] = 'H'
                 elif c == 'k':
                     self._available_castlings['k'] = 'h'
-                    self._available_castlings.append('h')
                 elif c == 'Q':
                     self._available_castlings['Q'] = 'A'
                 elif c == 'q':
