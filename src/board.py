@@ -531,7 +531,16 @@ class Board:
         for i, piece in enumerate(self._board):
             if get_piece_owner(piece) != self._active_player:
                 continue
-            moves |= {Move(piece=piece, src=Square(i)._square_name, dest=s._square_name) for s in self.legal_moves(Square(i))}
+            move_piece = piece.upper()
+            if move_piece == 'P':
+                move_piece = None
+            if move_piece is None and Square(i)._rank == PAWN_RANK[get_opponent(self._active_player)]:  # generate promotions for each move
+                moves |= {  
+                    Move(piece=move_piece, src=Square(i)._square_name, dest=s._square_name, promotion=promotion)
+                    for s in self.legal_moves(Square(i)) for promotion in 'RBNQ'
+                }
+            else:
+                moves |= {Move(piece=move_piece, src=Square(i)._square_name, dest=s._square_name) for s in self.legal_moves(Square(i))}
         return moves
 
     def __disambiguate_source_squares(self, move: Move) -> Set[Square]:
@@ -641,6 +650,10 @@ class Board:
 
             self[dest_square] = self[src_square]
             self[src_square] = '.'
+
+            if move.piece is None and dest_square._rank == BACK_RANK[get_opponent(self._active_player)]:
+                promotion = format_piece(move.promotion or 'Q', self._active_player)
+                self[dest_square] = promotion
 
             if move.piece == 'K':
                 for side in [format_piece(s, self._active_player) for s in 'KQ']:

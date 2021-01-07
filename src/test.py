@@ -44,6 +44,12 @@ class MoveTest(unittest.TestCase):
             set(map(Square, ['e3', 'e4']))
         )
 
+        board = Board('6b1/7P/8/8/8/8/r7/kr4BK w - - 0 1')
+        self.assertSetEqual(
+            board.get_all_legal_moves(),
+            set(map(parse_move, ['h7' + dest + prom for dest in ('h8', 'g8') for prom in 'RBNQ']))
+        )
+
     def test_king_moves(self):
         board = Board('8/8/8/3k4/5K2/8/8/8 b - - 0 1')
         self.assertSetEqual(
