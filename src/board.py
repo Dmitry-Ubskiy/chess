@@ -253,8 +253,50 @@ class Board:
 
         self._en_passant = None if en_passant == '-' else Square(en_passant)
 
+        self._available_castlings = {'K': None, 'k': None, 'Q': None, 'q': None}
+        if castling != '-':
+            for c in castling:
+                # FIXME detect the rook's actual place in case of 960
+                if c == 'K':
+                    self._available_castlings['K'] = 'H'
+                elif c == 'k':
+                    self._available_castlings['k'] = 'h'
+                    self._available_castlings.append('h')
+                elif c == 'Q':
+                    self._available_castlings['Q'] = 'A'
+                elif c == 'q':
+                    self._available_castlings['q'] = 'a'
+                else:
+                    raise NotImplementedError()
+
+        self._fifty_move_clock = int(fifty_move_clock)
+        self._move_number = int(move_number)
+
     def format(self) -> str:
         return '\n'.join(reversed([' '.join(row) for row in zip(*[iter(self._board)]*8)]))
+
+    def fen(self) -> str:
+        def format_row(row) -> str:
+            empty_count = 0
+            row_str = ''
+            for c in row:
+                if c == '.':
+                    empty_count += 1
+                else:
+                    if empty_count > 0:
+                        row_str += str(empty_count)
+                        empty_count = 0
+                    row_str += c
+            if empty_count > 0:
+                row_str += str(empty_count)
+            return row_str
+        board = '/'.join(reversed([format_row(row) for row in zip(*[iter(self._board)]*8)]))
+        active = 'w' if self._active_player == Player.WHITE else 'b'
+        castling = ''.join(sorted(k for k, v in self._available_castlings.items() if v is not None)) or '-'
+        en_passant = '-' if self._en_passant is None else self._en_passant._square_name
+        fifty_move_clock = str(self._fifty_move_clock)
+        move_number = str(self._move_number)
+        return f'{board} {active} {castling} {en_passant} {fifty_move_clock} {move_number}'
 
     def __getitem__(self, square: Square) -> str:
         return self._board[square._square]
