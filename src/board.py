@@ -675,3 +675,8 @@ class Board:
         new_board = copy.deepcopy(self)
         new_board.make_move(move)
         return new_board
+
+    def _flip_player_copy(self) -> "Board":
+        new_board = copy.deepcopy(self)
+        new_board._active_player = get_opponent(self._active_player)
+        return new_board
