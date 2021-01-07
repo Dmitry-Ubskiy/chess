@@ -3,6 +3,7 @@
 import unittest
 
 from board import Board, Square, Move
+from board import parse_move
 
 
 class MoveTest(unittest.TestCase):
@@ -54,6 +55,57 @@ class MoveTest(unittest.TestCase):
             board.legal_moves(Square('f4')),
             set(map(Square, ['f5', 'g5', 'g4', 'g3', 'f3', 'e3']))
         )
+
+
+class CastlingTest(unittest.TestCase):
+    def test_normal(self):
+        board = Board('r3k3/8/8/8/8/8/8/4K2R w Kq - 0 1')
+        
+        self.assertTrue(board.is_legal_move(Move(castling='0-0')))
+        self.assertFalse(board.is_legal_move(Move(castling='0-0-0')))
+
+        board.make_move(Move(castling='0-0'))
+        self.assertEqual(board.fen(), 'r3k3/8/8/8/8/8/8/5RK1 b q - 1 1')
+
+        self.assertFalse(board.is_legal_move(Move(castling='0-0')))
+        self.assertTrue(board.is_legal_move(Move(castling='0-0-0')))
+
+        board.make_move(Move(castling='0-0-0'))
+        self.assertEqual(board.fen(), '2kr4/8/8/8/8/8/8/5RK1 w - - 2 2')
+
+    def test_move(self):
+        board = Board('4k3/8/8/8/8/8/8/R3K2R w KQq - 0 1')
+        
+        self.assertTrue(board.is_legal_move(Move(castling='0-0')))
+        self.assertTrue(board.is_legal_move(Move(castling='0-0-0')))
+
+        kings_rook_moved = board.make_move_copy(parse_move('Rh1h2')).make_move_copy(parse_move('Ke7'))
+        self.assertFalse(kings_rook_moved.is_legal_move(Move(castling='0-0')))
+        self.assertTrue(kings_rook_moved.is_legal_move(Move(castling='0-0-0')))
+
+        queens_rook_moved = board.make_move_copy(parse_move('Ra1b1')).make_move_copy(parse_move('Ke7'))
+        self.assertTrue(queens_rook_moved.is_legal_move(Move(castling='0-0')))
+        self.assertFalse(queens_rook_moved.is_legal_move(Move(castling='0-0-0')))
+
+        king_moved = board.make_move_copy(parse_move('Ke1d1')).make_move_copy(parse_move('Ke7'))
+        self.assertFalse(king_moved.is_legal_move(Move(castling='0-0')))
+        self.assertFalse(king_moved.is_legal_move(Move(castling='0-0-0')))
+
+    def test_blocked(self):
+        board = Board('4k3/8/8/8/8/8/8/RN2K2R w KQq - 0 1')
+
+        self.assertTrue(board.is_legal_move(Move(castling='0-0')))
+        self.assertFalse(board.is_legal_move(Move(castling='0-0-0')))
+
+    def test_check(self):
+        board = Board('4k3/8/8/8/8/8/4r3/R3K3 w Q - 0 1')  # king in check
+        self.assertFalse(board.is_legal_move(Move(castling='0-0-0')))
+
+        board = Board('4k3/8/8/8/8/8/3r4/R3K3 w Q - 0 1')  # pass through check
+        self.assertFalse(board.is_legal_move(Move(castling='0-0-0')))
+
+        board = Board('4k3/8/8/8/8/8/2r5/R3K3 w Q - 0 1')  # end in check
+        self.assertFalse(board.is_legal_move(Move(castling='0-0-0')))
 
 
 class DiscoveredCheckTest(unittest.TestCase):

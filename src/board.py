@@ -233,6 +233,10 @@ PUSH_DIRECTION = {Player.WHITE: 1, Player.BLACK: -1}
 PLAYER_ABBR = {'w': Player.WHITE, 'b': Player.BLACK}
 PAWN_RANK = {Player.WHITE: 1, Player.BLACK: 6}  # 0-indexed; rank index 0 == '1'
 BACK_RANK = {Player.WHITE: 0, Player.BLACK: 7}  # 0-indexed; rank index 0 == '1'
+CASTLING_END_SQUARES = {
+    Player.WHITE: {'0-0': ('g1', 'f1'), '0-0-0': ('c1', 'd1')},
+    Player.BLACK: {'0-0': ('g8', 'f8'), '0-0-0': ('c8', 'd8')}
+}
 
 class Board:
     def __init__(self, fen: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'):
@@ -431,7 +435,30 @@ class Board:
 
     def is_legal_move(self, move: Move) -> bool:
         if move.castling is not None:
-            return False  # let's not deal with castlings for now
+            if move.castling not in CASTLINGS:
+                raise ValueError(f'Malformed castling designation: "{move.castling}"')
+            if self.is_in_check():  # starting in check
+                return False
+            opponent = get_opponent(self._active_player)
+            for s in CASTLING_END_SQUARES[self._active_player][move.castling]:  # moving through / ending in check
+                if self.__is_threatened_by(Square(s), opponent):
+                    return False
+
+            king = format_piece('K', self._active_player)
+            king_square = Square(self._board.index(king))
+
+            side = format_piece('K' if move.castling == '0-0' else 'Q', self._active_player)
+            if self._available_castlings[side] is None:
+                return False
+            rook_file = self._available_castlings[side].lower()
+            rank = '1' if self._active_player == Player.WHITE else '8'
+            rook_square = Square(rook_file + rank)
+
+            # span of squares between the king and the rook
+            span = king_square._square, rook_square._square
+            span = min(span) + 1, max(span)
+            return all(map(lambda s: self[Square(s)] == '.', range(*span)))
+
         assert move.dest is not None
         dest_square = Square(move.dest)
         if move.capture is not None:  # if you say you capture, you better actually capture something
@@ -499,6 +526,9 @@ class Board:
 
     def get_all_legal_moves(self) -> Set[Move]:
         moves = set()
+        for c in CASTLINGS:
+            if self.is_legal_move(parse_move(c)):
+                moves.add(parse_move(c))
         for i, piece in enumerate(self._board):
             if get_piece_owner(piece) != self._active_player:
                 continue
@@ -560,6 +590,8 @@ class Board:
     def get_move_canonical_form(self, move: Move) -> Move:
         maximal_form = self.disambiguate_move(move)
         canonical_move = copy.copy(maximal_form)
+        if canonical_move.castling is not None:
+            return canonical_move
         # minimize src
         src_addr = maximal_form.src
         src_file, src_rank = src_addr
@@ -574,22 +606,58 @@ class Board:
 
     def make_move(self, move: Move):
         if move.castling is not None:
-            raise NotImplementedError()
-        disambiguated_move = self.disambiguate_move(move)
+            side = format_piece('K' if move.castling == '0-0' else 'Q', self._active_player)
 
-        src_square = Square(disambiguated_move.src)
-        dest_square = Square(disambiguated_move.dest)
+            rank = '1' if self._active_player == Player.WHITE else '8'
+            rook_file = self._available_castlings[side].lower()
+            rook_square = Square(rook_file + rank)
 
-        if disambiguated_move.piece is None and dest_square == self._en_passant:  # en passant capture
-            self[self.__en_passant_pawn()] = '.'
+            king = format_piece('K', self._active_player)
+            king_square = Square(self._board.index(king))
 
-        self._en_passant = None
-        if move.piece is None and abs(src_square._rank - dest_square._rank) == 2:  # double push
-            self._en_passant = Square(src_square._file, (src_square._rank + dest_square._rank) // 2)
+            self[king_square] = '.'
+            self[rook_square] = '.'
 
-        self[dest_square] = self[src_square]
-        self[src_square] = '.'
+            # in every variation (classic, Fischer, really bad chess) the ending squares are the same
+            king_end_square, rook_end_square = CASTLING_END_SQUARES[self._active_player][move.castling]
+            self[Square(king_end_square)] = king
+            self[Square(rook_end_square)] = format_piece('R', self._active_player)
+
+            for side in [format_piece(s, self._active_player) for s in 'KQ']:
+                self._available_castlings[side] = None
+
+            self._fifty_move_clock += 1
+        else:
+            disambiguated_move = self.disambiguate_move(move)
+
+            src_square = Square(disambiguated_move.src)
+            dest_square = Square(disambiguated_move.dest)
+
+            if disambiguated_move.piece is None and dest_square == self._en_passant:  # en passant capture
+                self[self.__en_passant_pawn()] = '.'
+
+            self._en_passant = None
+            if move.piece is None and abs(src_square._rank - dest_square._rank) == 2:  # double push
+                self._en_passant = Square(src_square._file, (src_square._rank + dest_square._rank) // 2)
+
+            self[dest_square] = self[src_square]
+            self[src_square] = '.'
+
+            if move.piece == 'K':
+                for side in [format_piece(s, self._active_player) for s in 'KQ']:
+                    self._available_castlings[side] = None
+            elif move.piece == 'R':
+                if src_square._rank == BACK_RANK[self._active_player]:
+                    castling_file = format_piece(FILES[src_square._file], self._active_player)
+                    for side in list(self._available_castlings):
+                        if self._available_castlings[side] == castling_file:
+                            self._available_castlings[side] = None
+                
+                self._fifty_move_clock += 1
+
         self._active_player = get_opponent(self._active_player)
+        if self._active_player == Player.WHITE:
+            self._move_number += 1
 
     def make_move_copy(self, move: Move) -> "Board":
         new_board = copy.deepcopy(self)
