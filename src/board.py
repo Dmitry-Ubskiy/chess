@@ -99,6 +99,12 @@ class Square:
             return Square(self._file + df, self._rank + dr)
         return None
 
+    def __sub__(self, other: Tuple[int, int]) -> Optional["Square"]:
+        df, dr = other
+        if Square.valid_square(self._file - df, self._rank - dr):
+            return Square(self._file - df, self._rank - dr)
+        return None
+
     def __repr__(self) -> str:
         return self._square_name
 
@@ -357,7 +363,7 @@ class Board:
         if piece == 'K':
             return src.dist(dest) == 1
         if piece == 'N':
-            return dest in (src + dv for dv in KNIGHT_MOVES)
+            return (dest - (src._file, src._rank)) in KNIGHT_MOVES
         if piece == 'P':
             if src.dist(dest) == 1:  # pawn capture
                 if dest._rank - src._rank != PUSH_DIRECTION[src_owner]:
